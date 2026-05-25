@@ -227,6 +227,61 @@ USER'S RESUME CONTEXT (for reference):
                 yield "data: [DONE]\n\n"
                 return
 
+        # Fallback to GitHub Models (free tier using local GitHub credentials)
+        try:
+            from utils.ai_client import get_github_token
+            github_token = get_github_token()
+            if github_token:
+                print("Attempting chatbot streaming via GitHub Models...")
+                url = "https://models.inference.ai.azure.com/chat/completions"
+                
+                chat_messages = []
+                chat_messages.append({"role": "system", "content": system_prompt})
+                for m in messages:
+                    chat_messages.append({"role": m["role"], "content": m["content"]})
+                    
+                data = {
+                    "messages": chat_messages,
+                    "model": "gpt-4o-mini",
+                    "max_tokens": 1000,
+                    "stream": True
+                }
+                
+                req_obj = urllib.request.Request(
+                    url,
+                    data=json.dumps(data).encode("utf-8"),
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {github_token}"
+                    },
+                    method="POST"
+                )
+                
+                with urllib.request.urlopen(req_obj, timeout=15) as response:
+                    buffer = ""
+                    for chunk in response:
+                        buffer += chunk.decode("utf-8")
+                        while "\n" in buffer:
+                            line, buffer = buffer.split("\n", 1)
+                            line = line.strip()
+                            if not line:
+                                continue
+                            if line.startswith("data: "):
+                                data_str = line[6:]
+                                if data_str == "[DONE]":
+                                    break
+                                try:
+                                    data_json = json.loads(data_str)
+                                    text = data_json["choices"][0]["delta"].get("content", "")
+                                    if text:
+                                        yield f"data: {text}\n\n"
+                                except Exception:
+                                    pass
+                yield "data: [DONE]\n\n"
+                return
+        except Exception as e:
+            print(f"GitHub Models streaming failed: {str(e)}")
+
         # Local coach response fallback
         import time
         local_response = _get_local_coach_response(messages[-1]["content"] if messages else "", req.resumeContext)
