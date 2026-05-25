@@ -1,0 +1,4 @@
+﻿John Doe
+Experience: Worked on React and Node projects.
+Education: BSc Computer Science
+Skills: React, JavaScript, Node, Docker
