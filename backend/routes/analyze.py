@@ -12,6 +12,7 @@ from utils.ats_scanner import (
     COMMON_SKILLS,
 )
 from utils.ai_prompts import ANALYSIS_PROMPT
+from utils.web_search import search_ddg
 from utils.models import AnalysisResponse, ScanAtsRequest
 from utils.ai_client import call_ai, get_gemini_key, get_anthropic_key
 
@@ -519,10 +520,17 @@ async def analyze_resume(
         print(f"Local ATS scan error: {str(e)}")
         ats_report = {}
 
-    # Prepare prompt with resume and job description
+    # Perform a free live web search to ground the analysis in the latest 2026 hiring trends
+    role_name = ats_report.get("roleName", "Software Engineer")
+    search_query = f"trending {role_name} skills tools job requirements 2026"
+    print(f"Executing free DDG search grounding for: {search_query}")
+    web_results = search_ddg(search_query)
+
+    # Prepare prompt with resume, job description, and live web search grounding results
     prompt = ANALYSIS_PROMPT.format(
         resume_text=text,
-        job_description=jobDescription if jobDescription else "Not provided"
+        job_description=jobDescription if jobDescription else "Not provided",
+        web_search_results=web_results
     )
     
     # Call AI API

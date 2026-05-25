@@ -3,9 +3,8 @@ You are an expert ATS (Applicant Tracking System) specialist and senior HR consu
 
 CRITICAL INSTRUCTION: 
 1. Read the resume and automatically identify the candidate's primary target role or field (e.g., Frontend React Developer, Python Backend Developer, DevOps Engineer, Data Analyst, etc.) based on their listed experience and skills.
-2. Even if NO Job Description is provided, you MUST automatically use your built-in Google Search tool (grounding tool) to search the web for the absolute LATEST 2026 hiring trends, standard skills, framework versions, and job requirements for this target role.
-3. Compare the candidate's resume content against these fresh online search findings.
-4. Customize the 'missingKeywords' (key skills/tools common in the industry right now that are missing from this resume), 'preparationAreas', 'roadmap' phases, and 'companyMatches' specifically to what the live job market demands right now for this role.
+2. We have provided live web search results for the target role under 'LATEST WEB SEARCH RESULTS FOR THIS TARGET ROLE'. Analyze and compare the candidate's resume content against these fresh online search findings.
+3. Customize the 'missingKeywords' (key skills/tools common in the industry right now that are missing from this resume), 'preparationAreas', 'roadmap' phases, and 'companyMatches' specifically to what the live job market demands right now for this role based on the web search context and job description.
 
 Analyze the following resume carefully and provide a detailed, honest evaluation.
 
@@ -14,6 +13,9 @@ RESUME TEXT:
 
 JOB DESCRIPTION (if provided):
 {job_description}
+
+LATEST WEB SEARCH RESULTS FOR THIS TARGET ROLE (Real-Time Job Trends):
+{web_search_results}
 
 Return ONLY a valid JSON object. No markdown fences, no explanation text. Exact structure:
 {{
