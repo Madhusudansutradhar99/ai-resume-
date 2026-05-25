@@ -12,7 +12,8 @@ export default function Logo({ size = 48, showText = true, layout = 'column' }) 
         alignItems: 'center', 
         justifyContent: 'center',
         gap: isRow ? '12px' : '8px',
-        textAlign: isRow ? 'left' : 'center'
+        textAlign: isRow ? 'left' : 'center',
+        color: 'var(--text-primary)'
       }}
     >
       <svg 
@@ -23,38 +24,38 @@ export default function Logo({ size = 48, showText = true, layout = 'column' }) 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
         style={{ 
-          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.12))',
-          flexShrink: 0
+          filter: 'drop-shadow(0 0 8px var(--glow-shadow))',
+          flexShrink: 0,
+          color: 'var(--text-primary)'
         }}
       >
-        {/* Continuous fluid 'm' logo using lines and paths with identical stroke properties */}
         {/* Left vertical stem */}
-        <line x1="30" y1="38" x2="30" y2="68" stroke="white" strokeWidth="10" strokeLinecap="round" />
+        <line x1="28" y1="42" x2="28" y2="68" stroke="currentColor" strokeWidth="11" strokeLinecap="round" />
         
         {/* Middle vertical stem */}
-        <line x1="50" y1="44" x2="50" y2="74" stroke="white" strokeWidth="10" strokeLinecap="round" />
+        <line x1="50" y1="46" x2="50" y2="74" stroke="currentColor" strokeWidth="11" strokeLinecap="round" />
         
         {/* Right vertical stem */}
-        <line x1="70" y1="38" x2="70" y2="58" stroke="white" strokeWidth="10" strokeLinecap="round" />
+        <line x1="72" y1="42" x2="72" y2="58" stroke="currentColor" strokeWidth="11" strokeLinecap="round" />
         
         {/* Arches connecting the stems */}
         <path 
-          d="M 30 38 C 30 22, 50 22, 50 44" 
-          stroke="white" 
-          strokeWidth="10" 
+          d="M 28 42 C 28 26, 50 26, 50 46" 
+          stroke="currentColor" 
+          strokeWidth="11" 
           strokeLinecap="round" 
           fill="none" 
         />
         <path 
-          d="M 50 44 C 50 24, 70 24, 70 38" 
-          stroke="white" 
-          strokeWidth="10" 
+          d="M 50 46 C 50 28, 72 28, 72 42" 
+          stroke="currentColor" 
+          strokeWidth="11" 
           strokeLinecap="round" 
           fill="none" 
         />
         
         {/* Underline/pill under the right stem */}
-        <line x1="60" y1="74" x2="78" y2="69" stroke="white" strokeWidth="9" strokeLinecap="round" />
+        <line x1="58" y1="74" x2="78" y2="69" stroke="currentColor" strokeWidth="9.5" strokeLinecap="round" />
       </svg>
       {showText && (
         <div className="logo-text" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -64,7 +65,7 @@ export default function Logo({ size = 48, showText = true, layout = 'column' }) 
               fontWeight: 800, 
               fontSize: isRow ? `${size * 0.42}px` : '20px', 
               letterSpacing: '3px', 
-              color: '#ffffff',
+              color: 'var(--text-primary)',
               lineHeight: 1.1
             }}
           >

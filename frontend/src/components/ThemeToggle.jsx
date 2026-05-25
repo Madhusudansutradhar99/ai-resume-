@@ -1,57 +1,89 @@
 import React, { useEffect, useState } from 'react'
 
-export default function ThemeToggle(){
+export default function ThemeToggle() {
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('theme') || 'dark' } catch { return 'dark' }
   })
 
-  const themes = ['dark', 'light', 'blue']
-  const themeLabels = { dark: '🌙 Dark', light: '☀️ Light', blue: '🔵 Blue' }
+  const themes = ['dark', 'light', 'emerald', 'rose']
+  const themeLabels = { 
+    dark: '🌙 Cyberpunk', 
+    light: '☀️ Light', 
+    emerald: '🟢 Matrix Green', 
+    rose: '🌅 Sunset Aurora' 
+  }
 
   useEffect(() => {
     const root = document.documentElement
-    root.classList.remove('theme-dark','theme-light','theme-blue')
-    root.classList.add(theme === 'light' ? 'theme-light' : theme === 'blue' ? 'theme-blue' : 'theme-dark')
+    root.classList.remove('theme-dark', 'theme-light', 'theme-blue', 'theme-emerald', 'theme-rose')
+    root.classList.add(`theme-${theme}`)
     try { localStorage.setItem('theme', theme) } catch {}
 
     // Apply explicit CSS variables so inline styles read correct colors immediately
     try {
-      const themes = {
+      const themeConfigs = {
         dark: {
-          '--bg-page': '#05060a',
-          '--bg-primary': '#05060a',
-          '--bg-secondary': '#0f1419',
-          '--text-primary': '#e6eef8',
-          '--text-muted': '#9fb4c8',
-          '--card-bg': 'rgba(255,255,255,0.04)',
-          '--card-border': 'rgba(255,255,255,0.06)',
-          '--bg-card': 'rgba(255,255,255,0.04)',
-          '--border': 'rgba(255,255,255,0.06)'
+          '--bg-page': '#05060b',
+          '--bg-primary': '#05060b',
+          '--bg-secondary': '#0d0f17',
+          '--text-primary': '#f1f5f9',
+          '--text-muted': '#8492a6',
+          '--card-bg': 'rgba(13, 15, 23, 0.75)',
+          '--card-border': 'rgba(99, 102, 241, 0.15)',
+          '--bg-card': 'rgba(13, 15, 23, 0.75)',
+          '--border': 'rgba(99, 102, 241, 0.15)',
+          '--accent': '#6366f1',
+          '--accent-cyan': '#22d3ee',
+          '--accent-violet': '#a78bfa',
+          '--glow-shadow': 'rgba(99, 102, 241, 0.18)'
         },
         light: {
-          '--bg-page': '#ffffff',
-          '--bg-primary': '#ffffff',
-          '--bg-secondary': '#f9fafb',
-          '--text-primary': '#0b1220',
-          '--text-muted': '#4b5563',
-          '--card-bg': 'rgba(10,10,10,0.03)',
-          '--card-border': 'rgba(10,10,10,0.06)',
-          '--bg-card': 'rgba(10,10,10,0.03)',
-          '--border': 'rgba(10,10,10,0.06)'
+          '--bg-page': '#f8fafc',
+          '--bg-primary': '#f8fafc',
+          '--bg-secondary': '#f1f5f9',
+          '--text-primary': '#0f172a',
+          '--text-muted': '#64748b',
+          '--card-bg': 'rgba(255, 255, 255, 0.85)',
+          '--card-border': 'rgba(99, 102, 241, 0.12)',
+          '--bg-card': 'rgba(255, 255, 255, 0.85)',
+          '--border': 'rgba(99, 102, 241, 0.12)',
+          '--accent': '#4f46e5',
+          '--accent-cyan': '#06b6d4',
+          '--accent-violet': '#8b5cf6',
+          '--glow-shadow': 'rgba(79, 70, 229, 0.08)'
         },
-        blue: {
-          '--bg-page': '#ecf8ff',
-          '--bg-primary': '#ecf8ff',
-          '--bg-secondary': '#dceefb',
-          '--text-primary': '#003d6b',
-          '--text-muted': '#0f5a8a',
-          '--card-bg': 'rgba(30,144,255,0.08)',
-          '--card-border': 'rgba(30,144,255,0.15)',
-          '--bg-card': 'rgba(30,144,255,0.08)',
-          '--border': 'rgba(30,144,255,0.15)'
+        emerald: {
+          '--bg-page': '#020705',
+          '--bg-primary': '#020705',
+          '--bg-secondary': '#05120a',
+          '--text-primary': '#ecfdf5',
+          '--text-muted': '#6ee7b7',
+          '--card-bg': 'rgba(4, 18, 12, 0.75)',
+          '--card-border': 'rgba(16, 185, 129, 0.15)',
+          '--bg-card': 'rgba(4, 18, 12, 0.75)',
+          '--border': 'rgba(16, 185, 129, 0.15)',
+          '--accent': '#059669',
+          '--accent-cyan': '#10b981',
+          '--accent-violet': '#34d399',
+          '--glow-shadow': 'rgba(16, 185, 129, 0.18)'
+        },
+        rose: {
+          '--bg-page': '#090406',
+          '--bg-primary': '#090406',
+          '--bg-secondary': '#160a0f',
+          '--text-primary': '#fff1f2',
+          '--text-muted': '#fda4af',
+          '--card-bg': 'rgba(22, 10, 15, 0.75)',
+          '--card-border': 'rgba(244, 63, 94, 0.15)',
+          '--bg-card': 'rgba(22, 10, 15, 0.75)',
+          '--border': 'rgba(244, 63, 94, 0.15)',
+          '--accent': '#e11d48',
+          '--accent-cyan': '#f43f5e',
+          '--accent-violet': '#fb7185',
+          '--glow-shadow': 'rgba(244, 63, 94, 0.18)'
         }
       }
-      const vars = themes[theme] || themes.dark
+      const vars = themeConfigs[theme] || themeConfigs.dark
       const rootStyle = document.documentElement.style
       Object.entries(vars).forEach(([k, v]) => rootStyle.setProperty(k, v))
     } catch (e) {}
