@@ -528,7 +528,7 @@ async def analyze_resume(
     use_fallback = False
     response_text = ""
     try:
-        response_text = call_ai(prompt, max_tokens=2000, enable_search=True)
+        response_text = call_ai(prompt, max_tokens=2000, enable_search=False)
     except Exception as e:
         print(f"AI API failed, falling back to local analysis. Reason: {str(e)}")
         use_fallback = True
