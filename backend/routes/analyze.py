@@ -557,25 +557,42 @@ async def analyze_resume(
             
             # Combine the local structural report with the AI's semantic scoring
             # This mimics real ATS systems that blend parsing heuristics (formatting/sections) with semantic matching (NLP).
+            # Strict Alignment: 80% Parser Heuristics (Local rules) + 20% Semantic AI
             ai_score = result.get("overallScore", 0)
-            local_score = ats_report.get("atsScore", 0)
-            
-            # Hybrid score: 60% Semantic Match (AI) + 40% Parser Compliance (Local Rules)
-            if ai_score > 0:
-                combined_score = round((ai_score * 0.60) + (local_score * 0.40))
-            else:
-                combined_score = local_score
-            
-            result["overallScore"] = combined_score
-            
             ai_cats = result.get("categories", {}) or {}
+            
+            # Map categories with high parser compliance weight
+            format_structure = round((ats_report.get("sectionScore", 50) * 0.8) + (ai_cats.get("formatStructure", 50) * 0.2)) if ai_score > 0 else ats_report.get("sectionScore", 0)
+            keywords_match = round((ats_report.get("keywordScore", 50) * 0.8) + (ai_cats.get("keywordsMatch", 50) * 0.2)) if ai_score > 0 else ats_report.get("keywordScore", 0)
+            experience_quality = round((ats_report.get("experienceScore", 50) * 0.8) + (ai_cats.get("experienceQuality", 50) * 0.2)) if ai_score > 0 else ats_report.get("experienceScore", 0)
+            education_certs = round((ats_report.get("educationScore", 50) * 0.8) + (ai_cats.get("educationCerts", 50) * 0.2)) if ai_score > 0 else ats_report.get("educationScore", 0)
+            readability = round((ats_report.get("formattingScore", 50) * 0.8) + (ai_cats.get("readability", 50) * 0.2)) if ai_score > 0 else ats_report.get("formattingScore", 0)
+
             result["categories"] = {
-                "formatStructure": round((ai_cats.get("formatStructure", 50) * 0.5) + (ats_report.get("sectionScore", 50) * 0.5)) if ai_score > 0 else ats_report.get("sectionScore", 0),
-                "keywordsMatch": round((ai_cats.get("keywordsMatch", 50) * 0.6) + (ats_report.get("keywordScore", 50) * 0.4)) if ai_score > 0 else ats_report.get("keywordScore", 0),
-                "experienceQuality": round((ai_cats.get("experienceQuality", 50) * 0.6) + (ats_report.get("experienceScore", 50) * 0.4)) if ai_score > 0 else ats_report.get("experienceScore", 0),
-                "educationCerts": round((ai_cats.get("educationCerts", 50) * 0.5) + (ats_report.get("educationScore", 50) * 0.5)) if ai_score > 0 else ats_report.get("educationScore", 0),
-                "readability": round((ai_cats.get("readability", 50) * 0.5) + (ats_report.get("formattingScore", 50) * 0.5)) if ai_score > 0 else ats_report.get("formattingScore", 0),
+                "formatStructure": format_structure,
+                "keywordsMatch": keywords_match,
+                "experienceQuality": experience_quality,
+                "educationCerts": education_certs,
+                "readability": readability
             }
+
+            # Recalculate overall score strictly using the weighted rubric:
+            # Content (30%), Section (25%), ATS Essentials/Readability (20%), Tailoring (25%)
+            overall = round(
+                (experience_quality * 0.30)
+                + (format_structure * 0.25)
+                + (readability * 0.20)
+                + (keywords_match * 0.25)
+            )
+
+            # Apply hard gating: cap score if contact info is missing
+            contact_info = ats_report.get("contact", {})
+            if not contact_info.get("contactPresent", False):
+                overall = min(overall, 45)
+            elif not contact_info.get("emails") or not contact_info.get("phones"):
+                overall = min(overall, 65)
+
+            result["overallScore"] = max(15, min(95, overall))
             result["parsedText"] = text
             result["atsReport"] = ats_report
             return AnalysisResponse(**result)

@@ -597,9 +597,10 @@ export const ResumeEditor = ({ analysis }) => {
                 alignItems: 'center',
                 gap: '8px',
                 padding: '6px 14px',
-                background: 'rgba(255, 255, 255, 0.02)',
+                background: atsReport.atsScore >= 75 ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255, 255, 255, 0.02)',
                 borderRadius: '20px',
-                border: '1px solid var(--border)',
+                border: atsReport.atsScore >= 75 ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border)',
+                boxShadow: atsReport.atsScore >= 75 ? '0 0 10px rgba(16, 185, 129, 0.15)' : 'none',
               }}
             >
               <div
@@ -608,10 +609,11 @@ export const ResumeEditor = ({ analysis }) => {
                   height: '8px',
                   borderRadius: '50%',
                   background: atsReport.atsScore >= 75 ? 'var(--success)' : atsReport.atsScore >= 50 ? 'var(--warning)' : 'var(--danger)',
+                  boxShadow: atsReport.atsScore >= 75 ? '0 0 8px var(--success)' : 'none',
                 }}
               />
               <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-title)' }}>
-                Live ATS Score: {atsReport.atsScore}%
+                Live ATS Score: {atsReport.atsScore}% {atsReport.atsScore >= 75 ? ' (Ready to Apply 🚀)' : ''}
               </span>
             </div>
           </div>
@@ -624,6 +626,65 @@ export const ResumeEditor = ({ analysis }) => {
           <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', lineHeight: '1.6', marginBottom: '24px' }}>
             Switch to the <strong>Live Resume Editor</strong> tab above to directly modify details, address warnings, incorporate missing keywords in real-time, or check the <strong>PDF Preview & Templates</strong> tab to preview and download your optimized resume PDF. Your score calculates instantly as you edit.
           </p>
+
+          {atsReport && atsReport.atsScore >= 75 && (
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              style={{
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
+                borderRadius: '12px',
+                padding: '18px 24px',
+                marginBottom: '28px',
+                display: 'flex',
+                gap: '16px',
+                alignItems: 'center',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.1)',
+              }}
+            >
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.15)',
+                borderRadius: '50%',
+                padding: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)',
+                flexShrink: 0,
+              }}>
+                <CheckCircle2 size={26} color="#10b981" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <strong style={{ display: 'block', fontSize: '15px', color: '#10b981', marginBottom: '4px', fontFamily: 'var(--font-title)' }}>
+                  🎉 Resume Company-Ready! Aap is resume ko directly companies me bhej sakte hain.
+                </strong>
+                <span style={{ fontSize: '13px', color: 'var(--text-primary)', opacity: 0.9 }}>
+                  Aapka current score <strong>{atsReport.atsScore}%</strong> target threshold (75%) ko meet kar chuka hai, jo recruiters aur standards ke standard limits se upar hai. Niche click karke templates select karein aur PDF export karein!
+                </span>
+              </div>
+              <button
+                onClick={() => setActiveTab('preview')}
+                className="btn-glow"
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-title)',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                Go to Export 🖨️
+              </button>
+            </motion.div>
+          )}
 
           {atsReport && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
@@ -680,6 +741,44 @@ export const ResumeEditor = ({ analysis }) => {
           transition={{ duration: 0.3 }}
           style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
         >
+          {atsReport && atsReport.atsScore >= 75 && (
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              style={{
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
+                borderRadius: '12px',
+                padding: '16px 20px',
+                display: 'flex',
+                gap: '14px',
+                alignItems: 'center',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.1)',
+              }}
+            >
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.15)',
+                borderRadius: '50%',
+                padding: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)',
+                flexShrink: 0,
+              }}>
+                <CheckCircle2 size={24} color="#10b981" />
+              </div>
+              <div>
+                <strong style={{ display: 'block', fontSize: '14.5px', color: '#10b981', marginBottom: '4px', fontFamily: 'var(--font-title)' }}>
+                  🚀 Ready to Submit! Aap is resume ko directly companies me send kar sakte hain.
+                </strong>
+                <span style={{ fontSize: '13px', color: 'var(--text-primary)', opacity: 0.9 }}>
+                  Aapka resume successfully optimized ho gaya hai. Template customize karke **Print / Save PDF** button click karein aur directly apply karna start karein.
+                </span>
+              </div>
+            </motion.div>
+          )}
+
           {/* Template Selector */}
           <div style={{
             display: 'flex',
