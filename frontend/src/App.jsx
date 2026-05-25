@@ -54,17 +54,23 @@ function App() {
 
   const handleStartFromLanding = () => {
     setShowUploadZone(true)
+    localStorage.setItem('introSeen', 'true')
   }
 
-  // Load analysis from localStorage on mount
+  // Load analysis and intro state from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem('resumeAnalysis')
       if (saved) {
         setAnalysis(normalizeAnalysis(JSON.parse(saved)))
       }
+      
+      const introSeen = localStorage.getItem('introSeen')
+      if (introSeen === 'true') {
+        setShowUploadZone(true)
+      }
     } catch (err) {
-      console.error('Error loading saved analysis:', err)
+      console.error('Error loading saved analysis or intro state:', err)
     }
   }, [])
 
@@ -95,7 +101,7 @@ function App() {
   const handleReset = () => {
     setAnalysis(null)
     setResumeFile(null)
-    setShowUploadZone(false) // Open the intro landing page on reset
+    setShowUploadZone(true) // Go directly to the upload zone on reset
     localStorage.removeItem('resumeAnalysis')
   }
 
