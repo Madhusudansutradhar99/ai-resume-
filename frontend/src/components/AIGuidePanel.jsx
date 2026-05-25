@@ -2,6 +2,47 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, Send, X, Bot, Sparkles } from 'lucide-react'
 
+const renderMessageContent = (content) => {
+  if (!content) return '';
+  
+  // Basic markdown parser
+  let html = content;
+  
+  // Escape HTML to prevent XSS
+  html = html
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  // Code block: ```code```
+  html = html.replace(/```([\s\S]*?)```/g, '<pre style="background: rgba(0,0,0,0.25); padding: 10px; border-radius: 6px; font-family: monospace; overflow-x: auto; font-size: 0.9em; margin: 8px 0; border: 1px solid var(--border);">$1</pre>');
+
+  // Inline code: `code`
+  html = html.replace(/`([^`\n]+?)`/g, '<code style="background: rgba(255,255,255,0.08); padding: 2px 4px; border-radius: 4px; font-family: monospace; font-size: 0.9em; border: 1px solid var(--border);">$1</code>');
+
+  // Bold: **text** or __text__
+  html = html.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__([^_]+?)__/g, '<strong>$1</strong>');
+  
+  // Headers: ###, ##, #
+  html = html.replace(/^###\s+(.+)$/gm, '<h3 style="margin: 12px 0 6px; font-weight: 800; font-size: 1.15em; color: var(--text-primary);">$1</h3>');
+  html = html.replace(/^##\s+(.+)$/gm, '<h4 style="margin: 12px 0 6px; font-weight: 700; font-size: 1.1em; color: var(--text-primary);">$1</h4>');
+  html = html.replace(/^#\s+(.+)$/gm, '<h2 style="margin: 14px 0 8px; font-weight: 900; font-size: 1.25em; color: var(--text-primary);">$1</h2>');
+
+  // Bullet items starting with *, -, or •
+  html = html.replace(/^\s*[\*\-•]\s+(.+)$/gm, '<li style="margin-left: 16px; margin-bottom: 6px; list-style-type: disc;">$1</li>');
+  
+  // Replace newlines with <br />
+  html = html.replace(/\n/g, '<br />');
+  
+  // Clean up <br /> after block tags
+  html = html.replace(/<\/li><br\s*\/?>/gi, '</li>');
+  html = html.replace(/<\/pre><br\s*\/?>/gi, '</pre>');
+  html = html.replace(/<\/h[1-6]><br\s*\/?>/gi, '</h$1>');
+  
+  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+};
+
 export const AIGuidePanel = ({ resumeContext }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([])
@@ -308,7 +349,7 @@ export const AIGuidePanel = ({ resumeContext }) => {
                             boxShadow: msg.role === 'user' ? '0 4px 15px rgba(99, 102, 241, 0.15)' : 'none',
                           }}
                         >
-                          {msg.content}
+                          {msg.role === 'user' ? msg.content : renderMessageContent(msg.content)}
                         </div>
                       </motion.div>
                     ))}

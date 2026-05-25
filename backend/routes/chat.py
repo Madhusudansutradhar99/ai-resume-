@@ -186,7 +186,7 @@ USER'S RESUME CONTEXT (for reference):
             try:
                 genai.configure(api_key=gemini_key)
                 model = genai.GenerativeModel(
-                    model_name="gemini-2.5-flash",
+                    model_name="gemini-flash-latest",
                     system_instruction=system_prompt
                 )
                 
