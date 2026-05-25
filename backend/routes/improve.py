@@ -128,7 +128,8 @@ def _improve_section_locally(section: str, content: str, job_title: str) -> dict
 @router.post("/improve-section", response_model=ImproveSectionResponse)
 async def improve_section(
     req: ImproveSectionRequest,
-    x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key")
+    x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key"),
+    x_github_token: str = Header(default=None, alias="X-GitHub-Token")
 ):
     """
     Improve a specific section of a resume using AI.
@@ -151,7 +152,7 @@ async def improve_section(
     use_fallback = False
     response_text = ""
     try:
-        response_text = call_ai(prompt, max_tokens=1000, api_key=x_gemini_api_key)
+        response_text = call_ai(prompt, max_tokens=1000, api_key=x_gemini_api_key, github_token=x_github_token)
     except Exception as e:
         print(f"AI API failed inside improve_section, running local rewriter: {str(e)}")
         use_fallback = True

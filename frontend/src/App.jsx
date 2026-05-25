@@ -25,6 +25,8 @@ function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [customKey, setCustomKey] = useState('')
   const [showKeyText, setShowKeyText] = useState(false)
+  const [customGithub, setCustomGithub] = useState('')
+  const [showGithubText, setShowGithubText] = useState(false)
   const [saveStatus, setSaveStatus] = useState('')
 
   const normalizeAnalysis = (raw) => {
@@ -80,6 +82,11 @@ function App() {
       if (savedKey) {
         setCustomKey(savedKey)
       }
+      
+      const savedGithub = localStorage.getItem('custom_github_token')
+      if (savedGithub) {
+        setCustomGithub(savedGithub)
+      }
     } catch (err) {
       console.error('Error loading saved analysis or intro state:', err)
     }
@@ -134,6 +141,25 @@ function App() {
     localStorage.removeItem('custom_gemini_api_key')
     setCustomKey('')
     setSaveStatus('Key cleared.')
+    setTimeout(() => setSaveStatus(''), 3000)
+  }
+
+  const handleSaveGithub = () => {
+    if (customGithub.trim()) {
+      localStorage.setItem('custom_github_token', customGithub.trim())
+      setSaveStatus('GitHub token saved!')
+      setTimeout(() => setSaveStatus(''), 3000)
+    } else {
+      localStorage.removeItem('custom_github_token')
+      setSaveStatus('GitHub token cleared.')
+      setTimeout(() => setSaveStatus(''), 3000)
+    }
+  }
+
+  const handleClearGithub = () => {
+    localStorage.removeItem('custom_github_token')
+    setCustomGithub('')
+    setSaveStatus('GitHub token cleared.')
     setTimeout(() => setSaveStatus(''), 3000)
   }
 
@@ -463,6 +489,85 @@ function App() {
                 
                 <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: '1.4' }}>
                   💡 This saves the key locally in your browser cache. All analysis requests will be sent with your key for unlimited operations.
+                </p>
+              </div>
+
+              {/* GitHub Token Panel */}
+              <div className="panel-soft" style={{ padding: '16px', display: 'block', marginBottom: '18px' }}>
+                <strong style={{ fontSize: '13px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                  <Database size={13} color="var(--accent-cyan)" />
+                  GitHub Access Token (Free Fallback)
+                </strong>
+                
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', position: 'relative' }}>
+                  <input
+                    type={showGithubText ? 'text' : 'password'}
+                    className="input-cyber"
+                    style={{ flex: 1, paddingRight: '40px' }}
+                    placeholder="Enter GitHub Token (github_pat_...)"
+                    value={customGithub}
+                    onChange={(e) => setCustomGithub(e.target.value)}
+                  />
+                  <button
+                    onClick={() => setShowGithubText(!showGithubText)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {showGithubText ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                    {/* Status is shared */}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={handleClearGithub}
+                      style={{
+                        padding: '6px 12px',
+                        background: 'rgba(239, 68, 68, 0.08)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        color: 'var(--danger)',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={handleSaveGithub}
+                      className="btn-glow"
+                      style={{
+                        padding: '6px 12px',
+                        background: 'var(--accent)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                      }}
+                    >
+                      Save Token
+                    </button>
+                  </div>
+                </div>
+                
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: '1.4' }}>
+                  💡 Provides a 100% free fallback using the GitHub Models API (gpt-4o-mini). Useful for deployed environments.
                 </p>
               </div>
 

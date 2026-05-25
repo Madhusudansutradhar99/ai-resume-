@@ -473,7 +473,8 @@ def _build_fallback_analysis(text: str, job_description: str, ats_report: dict =
 async def analyze_resume(
     resume: UploadFile = File(...),
     jobDescription: str = Form(default=""),
-    x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key")
+    x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key"),
+    x_github_token: str = Header(default=None, alias="X-GitHub-Token")
 ):
     """
     Analyze a resume file and return detailed scoring and improvement roadmap.
@@ -537,7 +538,7 @@ async def analyze_resume(
     use_fallback = False
     response_text = ""
     try:
-        response_text = call_ai(prompt, max_tokens=2000, enable_search=False, api_key=x_gemini_api_key)
+        response_text = call_ai(prompt, max_tokens=2000, enable_search=False, api_key=x_gemini_api_key, github_token=x_github_token)
     except Exception as e:
         print(f"AI API failed, falling back to local analysis. Reason: {str(e)}")
         use_fallback = True

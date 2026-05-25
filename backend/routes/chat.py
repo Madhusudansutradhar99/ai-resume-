@@ -159,7 +159,8 @@ def _get_local_coach_response(user_message: str, resume_context: str) -> str:
 @router.post("/chat")
 async def chat(
     req: ChatRequest,
-    x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key")
+    x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key"),
+    x_github_token: str = Header(default=None, alias="X-GitHub-Token")
 ):
     """
     Stream chat responses for resume coaching.
@@ -230,7 +231,7 @@ USER'S RESUME CONTEXT (for reference):
         # Fallback to GitHub Models (free tier using local GitHub credentials)
         try:
             from utils.ai_client import get_github_token
-            github_token = get_github_token()
+            github_token = get_github_token(x_github_token)
             if github_token:
                 print("Attempting chatbot streaming via GitHub Models...")
                 url = "https://models.inference.ai.azure.com/chat/completions"

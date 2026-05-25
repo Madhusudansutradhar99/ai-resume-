@@ -7,11 +7,15 @@ const api = axios.create({
   timeout: 30000,
 })
 
-// Inject custom Gemini API key if present in localStorage
+// Inject custom Gemini / GitHub API key if present in localStorage
 api.interceptors.request.use((config) => {
   const customKey = localStorage.getItem('custom_gemini_api_key')
   if (customKey) {
     config.headers['X-Gemini-API-Key'] = customKey
+  }
+  const customGithub = localStorage.getItem('custom_github_token')
+  if (customGithub) {
+    config.headers['X-GitHub-Token'] = customGithub
   }
   return config
 }, (error) => {

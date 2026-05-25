@@ -17,8 +17,11 @@ def get_anthropic_key():
         return key.strip()
     return None
 
-def get_github_token() -> str:
-    """Retrieve the user's saved GitHub credential token via env or git credential fill"""
+def get_github_token(client_token: str = None) -> str:
+    """Retrieve the user's saved GitHub credential token via client header, env, or git credential fill"""
+    if client_token:
+        return client_token.strip()
+        
     # Check env first
     token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
     if token:
@@ -44,9 +47,9 @@ def get_github_token() -> str:
         
     return None
 
-def call_github_models(prompt: str, max_tokens: int = 2000, system: str = None) -> str:
+def call_github_models(prompt: str, max_tokens: int = 2000, system: str = None, client_token: str = None) -> str:
     """Make a call to the free GitHub Models API using gpt-4o-mini"""
-    token = get_github_token()
+    token = get_github_token(client_token)
     if not token:
         raise ValueError("No GitHub token found to authenticate with GitHub Models.")
         
@@ -76,7 +79,7 @@ def call_github_models(prompt: str, max_tokens: int = 2000, system: str = None) 
         res = json.loads(response.read().decode("utf-8"))
         return res["choices"][0]["message"]["content"]
 
-def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_search: bool = False, api_key: str = None) -> str:
+def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_search: bool = False, api_key: str = None, github_token: str = None) -> str:
     """Universal wrapper to call AI using Gemini (preferred), Claude (fallback), or GitHub Models (free fallback)"""
     gemini_key = api_key or get_gemini_key()
     if gemini_key:
@@ -143,8 +146,8 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
             
     # Fallback to GitHub Models (free tier using local GitHub credentials)
     try:
-        print("Falling back to GitHub Models API (gpt-4o-mini) via active credential...")
-        return call_github_models(prompt, max_tokens, system)
+        print("Falling back to GitHub Models API (gpt-4o-mini)...")
+        return call_github_models(prompt, max_tokens, system, github_token)
     except Exception as e:
         print(f"GitHub Models API fallback failed: {str(e)}")
         

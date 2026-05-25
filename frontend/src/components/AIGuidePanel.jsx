@@ -35,9 +35,13 @@ export const AIGuidePanel = ({ resumeContext }) => {
 
     try {
       const customKey = localStorage.getItem('custom_gemini_api_key')
+      const customGithub = localStorage.getItem('custom_github_token')
       const headers = { 'Content-Type': 'application/json' }
       if (customKey) {
         headers['X-Gemini-API-Key'] = customKey
+      }
+      if (customGithub) {
+        headers['X-GitHub-Token'] = customGithub
       }
 
       const response = await fetch(
