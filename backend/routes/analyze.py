@@ -1,7 +1,7 @@
 import os
 import json
 import re
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Header
 from utils.pdf_parser import extract_text_from_pdf, extract_text_from_docx
 from utils.ats_scanner import (
     scan_ats,
@@ -471,7 +471,8 @@ def _build_fallback_analysis(text: str, job_description: str, ats_report: dict =
 @router.post("/analyze", response_model=AnalysisResponse)
 async def analyze_resume(
     resume: UploadFile = File(...),
-    jobDescription: str = Form(default="")
+    jobDescription: str = Form(default=""),
+    x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key")
 ):
     """
     Analyze a resume file and return detailed scoring and improvement roadmap.
@@ -528,7 +529,7 @@ async def analyze_resume(
     use_fallback = False
     response_text = ""
     try:
-        response_text = call_ai(prompt, max_tokens=2000, enable_search=False)
+        response_text = call_ai(prompt, max_tokens=2000, enable_search=False, api_key=x_gemini_api_key)
     except Exception as e:
         print(f"AI API failed, falling back to local analysis. Reason: {str(e)}")
         use_fallback = True
@@ -546,13 +547,26 @@ async def analyze_resume(
             if "careerGuidance" not in result or not result["careerGuidance"]:
                 result["careerGuidance"] = _build_career_guidance(text, jobDescription, ats_report.get("roleName"))
             
-            result["overallScore"] = ats_report.get("atsScore", result.get("overallScore", 0))
+            # Combine the local structural report with the AI's semantic scoring
+            # This mimics real ATS systems that blend parsing heuristics (formatting/sections) with semantic matching (NLP).
+            ai_score = result.get("overallScore", 0)
+            local_score = ats_report.get("atsScore", 0)
+            
+            # Hybrid score: 60% Semantic Match (AI) + 40% Parser Compliance (Local Rules)
+            if ai_score > 0:
+                combined_score = round((ai_score * 0.60) + (local_score * 0.40))
+            else:
+                combined_score = local_score
+            
+            result["overallScore"] = combined_score
+            
+            ai_cats = result.get("categories", {}) or {}
             result["categories"] = {
-                "formatStructure": ats_report.get("sectionScore", 0),
-                "keywordsMatch": ats_report.get("keywordScore", 0),
-                "experienceQuality": ats_report.get("experienceScore", 0),
-                "educationCerts": ats_report.get("educationScore", 0),
-                "readability": ats_report.get("formattingScore", 0),
+                "formatStructure": round((ai_cats.get("formatStructure", 50) * 0.5) + (ats_report.get("sectionScore", 50) * 0.5)) if ai_score > 0 else ats_report.get("sectionScore", 0),
+                "keywordsMatch": round((ai_cats.get("keywordsMatch", 50) * 0.6) + (ats_report.get("keywordScore", 50) * 0.4)) if ai_score > 0 else ats_report.get("keywordScore", 0),
+                "experienceQuality": round((ai_cats.get("experienceQuality", 50) * 0.6) + (ats_report.get("experienceScore", 50) * 0.4)) if ai_score > 0 else ats_report.get("experienceScore", 0),
+                "educationCerts": round((ai_cats.get("educationCerts", 50) * 0.5) + (ats_report.get("educationScore", 50) * 0.5)) if ai_score > 0 else ats_report.get("educationScore", 0),
+                "readability": round((ai_cats.get("readability", 50) * 0.5) + (ats_report.get("formattingScore", 50) * 0.5)) if ai_score > 0 else ats_report.get("formattingScore", 0),
             }
             result["parsedText"] = text
             result["atsReport"] = ats_report

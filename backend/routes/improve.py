@@ -1,5 +1,5 @@
 import json
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from utils.ai_prompts import IMPROVE_SECTION_PROMPT
 from utils.models import ImproveSectionRequest, ImproveSectionResponse
 from utils.ai_client import call_ai
@@ -126,7 +126,10 @@ def _improve_section_locally(section: str, content: str, job_title: str) -> dict
 
 
 @router.post("/improve-section", response_model=ImproveSectionResponse)
-async def improve_section(req: ImproveSectionRequest):
+async def improve_section(
+    req: ImproveSectionRequest,
+    x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key")
+):
     """
     Improve a specific section of a resume using AI.
     
@@ -148,7 +151,7 @@ async def improve_section(req: ImproveSectionRequest):
     use_fallback = False
     response_text = ""
     try:
-        response_text = call_ai(prompt, max_tokens=1000)
+        response_text = call_ai(prompt, max_tokens=1000, api_key=x_gemini_api_key)
     except Exception as e:
         print(f"AI API failed inside improve_section, running local rewriter: {str(e)}")
         use_fallback = True

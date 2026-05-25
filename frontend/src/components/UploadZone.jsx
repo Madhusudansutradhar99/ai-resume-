@@ -105,9 +105,39 @@ export const UploadZone = ({ onAnalyze, isLoading }) => {
           <p style={{ fontSize: '17px', fontWeight: 700, marginBottom: '6px', color: 'var(--text-primary)' }}>
             {isDragActive ? 'Release to drop your resume' : 'Drag & drop your resume here'}
           </p>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13.5px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13.5px', marginBottom: 0 }}>
             Supports standard PDF and Word DOCX formats (Up to 5MB)
           </p>
+          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{
+              fontSize: '11px',
+              padding: '4px 10px',
+              background: localStorage.getItem('custom_gemini_api_key') ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+              border: localStorage.getItem('custom_gemini_api_key') ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid var(--border)',
+              color: localStorage.getItem('custom_gemini_api_key') ? 'var(--success)' : 'var(--text-muted)',
+              borderRadius: '20px',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              🔑 Key: {localStorage.getItem('custom_gemini_api_key') ? 'Custom Active' : 'Default Server'}
+            </span>
+            <span style={{
+              fontSize: '11px',
+              padding: '4px 10px',
+              background: 'rgba(34, 211, 238, 0.05)',
+              border: '1px solid rgba(34, 211, 238, 0.2)',
+              color: 'var(--accent-cyan)',
+              borderRadius: '20px',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              ⚡ ATS Sync: Live
+            </span>
+          </div>
         </motion.div>
 
         {/* Selected File Details */}

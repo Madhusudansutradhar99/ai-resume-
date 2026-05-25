@@ -7,6 +7,17 @@ const api = axios.create({
   timeout: 30000,
 })
 
+// Inject custom Gemini API key if present in localStorage
+api.interceptors.request.use((config) => {
+  const customKey = localStorage.getItem('custom_gemini_api_key')
+  if (customKey) {
+    config.headers['X-Gemini-API-Key'] = customKey
+  }
+  return config
+}, (error) => {
+  return Promise.reject(error)
+})
+
 export const analyzeResume = async (file, jobDescription = '') => {
   const formData = new FormData()
   formData.append('resume', file)

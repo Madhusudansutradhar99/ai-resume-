@@ -1,6 +1,6 @@
 import os
 import google.generativeai as genai
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
 from fastapi.responses import StreamingResponse
 from anthropic import Anthropic
 from utils.models import ChatRequest
@@ -157,7 +157,10 @@ def _get_local_coach_response(user_message: str, resume_context: str) -> str:
 
 
 @router.post("/chat")
-async def chat(req: ChatRequest):
+async def chat(
+    req: ChatRequest,
+    x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key")
+):
     """
     Stream chat responses for resume coaching.
     
@@ -177,7 +180,7 @@ USER'S RESUME CONTEXT (for reference):
 
     def generate():
         """Generator function for streaming response"""
-        gemini_key = get_gemini_key()
+        gemini_key = x_gemini_api_key or get_gemini_key()
         if gemini_key:
             try:
                 genai.configure(api_key=gemini_key)

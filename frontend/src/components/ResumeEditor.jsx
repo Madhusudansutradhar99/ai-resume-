@@ -4,7 +4,8 @@ import { Plus, X, Download, Sparkles, Printer, FileText, CheckCircle2, AlertTria
 import { improveSection, scanAtsDirect } from '../api'
 
 export const ResumeEditor = ({ analysis }) => {
-  const [isEditMode, setIsEditMode] = useState(false)
+  const [activeTab, setActiveTab] = useState('checklist') // 'checklist', 'editor', 'preview'
+  const [selectedTemplate, setSelectedTemplate] = useState('tech') // 'classic', 'tech', 'creative'
   const [resumeData, setResumeData] = useState({
     personalInfo: {
       name: '',
@@ -92,7 +93,7 @@ export const ResumeEditor = ({ analysis }) => {
 
   // Debounced ATS Rescanning
   useEffect(() => {
-    if (!isEditMode) return
+    if (activeTab === 'checklist') return
 
     const timer = setTimeout(() => {
       handleScanAts()
@@ -393,7 +394,6 @@ export const ResumeEditor = ({ analysis }) => {
         boxShadow: '0 10px 40px -10px rgba(0,0,0,0.3)',
       }}
     >
-      {/* Print Stylesheet (Clean standard layout for PDF rendering) */}
       <style>{`
         @media print {
           body * {
@@ -413,67 +413,100 @@ export const ResumeEditor = ({ analysis }) => {
             margin: 0 !important;
             padding: 20px !important;
             background: white !important;
-            font-family: "Georgia", "Times New Roman", serif !important;
             color: #111111 !important;
             line-height: 1.5 !important;
           }
+          
+          /* Template Font Families */
+          #print-layout-area.template-classic {
+            font-family: "Georgia", "Times New Roman", serif !important;
+          }
+          #print-layout-area.template-tech {
+            font-family: "Arial", "Helvetica", sans-serif !important;
+          }
+          #print-layout-area.template-creative {
+            font-family: "Trebuchet MS", "Helvetica", sans-serif !important;
+          }
+
           .print-header {
-            text-align: center;
-            border-bottom: 2px solid #333333;
             padding-bottom: 12px;
             margin-bottom: 20px;
           }
+          #print-layout-area.template-classic .print-header {
+            text-align: center;
+            border-bottom: 2px solid #333333;
+          }
+          #print-layout-area.template-tech .print-header {
+            text-align: left;
+            border-bottom: 2px solid #333333;
+          }
+          #print-layout-area.template-creative .print-header {
+            text-align: left;
+            border-left: 4px solid #6366f1;
+            padding-left: 12px;
+          }
+
           .print-header h1 {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 800;
             margin: 0 0 6px 0;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
           }
+          
+          #print-layout-area.template-creative .print-header h1 {
+            color: #6366f1 !important;
+          }
+
           .print-contact {
-            font-size: 13px;
-            color: #555555;
+            font-size: 11px;
+            color: #444444;
           }
+
           .print-section {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
           }
           .print-section-title {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 1px solid #dddddd;
-            padding-bottom: 4px;
+            padding-bottom: 3px;
             margin-bottom: 10px;
             color: #222222;
           }
+          #print-layout-area.template-creative .print-section-title {
+            color: #6366f1 !important;
+          }
+
           .print-item {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
           }
           .print-item-header {
             display: flex;
             justify-content: space-between;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 13px;
           }
           .print-item-sub {
             display: flex;
             justify-content: space-between;
             font-style: italic;
-            font-size: 13px;
+            font-size: 12px;
             color: #444444;
             margin-bottom: 4px;
           }
           .print-bullets {
             margin: 0;
-            padding-left: 20px;
-            font-size: 13px;
+            padding-left: 18px;
+            font-size: 12px;
           }
           .print-bullets li {
-            margin-bottom: 4px;
+            margin-bottom: 3px;
           }
           .print-skills {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
           }
         }
@@ -494,16 +527,16 @@ export const ResumeEditor = ({ analysis }) => {
       >
         <div style={{ display: 'flex', gap: '20px' }}>
           <button
-            onClick={() => setIsEditMode(false)}
+            onClick={() => setActiveTab('checklist')}
             style={{
               background: 'none',
               border: 'none',
-              color: !isEditMode ? 'var(--accent-cyan)' : 'var(--text-muted)',
+              color: activeTab === 'checklist' ? 'var(--accent-cyan)' : 'var(--text-muted)',
               fontSize: '14.5px',
               fontWeight: 700,
               cursor: 'pointer',
               padding: '8px 0',
-              borderBottom: !isEditMode ? '2px solid var(--accent-cyan)' : 'none',
+              borderBottom: activeTab === 'checklist' ? '2px solid var(--accent-cyan)' : 'none',
               transition: 'all 0.2s',
               fontFamily: 'var(--font-title)',
             }}
@@ -511,21 +544,38 @@ export const ResumeEditor = ({ analysis }) => {
             📊 Optimization Checklist
           </button>
           <button
-            onClick={() => setIsEditMode(true)}
+            onClick={() => setActiveTab('editor')}
             style={{
               background: 'none',
               border: 'none',
-              color: isEditMode ? 'var(--accent-cyan)' : 'var(--text-muted)',
+              color: activeTab === 'editor' ? 'var(--accent-cyan)' : 'var(--text-muted)',
               fontSize: '14.5px',
               fontWeight: 700,
               cursor: 'pointer',
               padding: '8px 0',
-              borderBottom: isEditMode ? '2px solid var(--accent-cyan)' : 'none',
+              borderBottom: activeTab === 'editor' ? '2px solid var(--accent-cyan)' : 'none',
               transition: 'all 0.2s',
               fontFamily: 'var(--font-title)',
             }}
           >
             ✏️ Live Resume Editor
+          </button>
+          <button
+            onClick={() => setActiveTab('preview')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: activeTab === 'preview' ? 'var(--accent-cyan)' : 'var(--text-muted)',
+              fontSize: '14.5px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              padding: '8px 0',
+              borderBottom: activeTab === 'preview' ? '2px solid var(--accent-cyan)' : 'none',
+              transition: 'all 0.2s',
+              fontFamily: 'var(--font-title)',
+            }}
+          >
+            👁️ PDF Preview & Templates
           </button>
         </div>
 
@@ -568,11 +618,11 @@ export const ResumeEditor = ({ analysis }) => {
         )}
       </div>
 
-      {!isEditMode ? (
+      {activeTab === 'checklist' && (
         // Analysis Overview Summary
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', lineHeight: '1.6', marginBottom: '24px' }}>
-            Switch to the <strong>Live Resume Editor</strong> tab above to directly modify details, address warnings, incorporate missing keywords in real-time, and download your optimized resume PDF. Your score calculates instantly as you edit.
+            Switch to the <strong>Live Resume Editor</strong> tab above to directly modify details, address warnings, incorporate missing keywords in real-time, or check the <strong>PDF Preview & Templates</strong> tab to preview and download your optimized resume PDF. Your score calculates instantly as you edit.
           </p>
 
           {atsReport && (
@@ -621,7 +671,303 @@ export const ResumeEditor = ({ analysis }) => {
             </div>
           )}
         </motion.div>
-      ) : (
+      )}
+
+      {activeTab === 'preview' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+        >
+          {/* Template Selector */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid var(--border)',
+            padding: '12px 18px',
+            borderRadius: '12px',
+          }}>
+            <div>
+              <h4 style={{ margin: 0, fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-title)' }}>Select Resume Template</h4>
+              <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>Choose an ATS-compliant layout for job applications.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {['classic', 'tech', 'creative'].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setSelectedTemplate(t)}
+                  style={{
+                    padding: '8px 14px',
+                    background: selectedTemplate === t ? 'var(--accent)' : 'rgba(255,255,255,0.03)',
+                    color: selectedTemplate === t ? 'white' : 'var(--text-primary)',
+                    border: selectedTemplate === t ? 'none' : '1px solid var(--border)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    textTransform: 'capitalize',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {t === 'classic' ? 'Minimalist Serif' : t === 'tech' ? 'Modern Tech' : 'Elegant Creative'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* A4 Paper Frame Container */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: '12px',
+            padding: '40px 20px',
+            display: 'flex',
+            justifyContent: 'center',
+            overflowX: 'auto',
+          }}>
+            <div
+              className={`a4-preview-page template-${selectedTemplate}`}
+              style={{
+                width: '100%',
+                maxWidth: '800px',
+                background: 'white',
+                color: '#111111',
+                padding: '50px',
+                borderRadius: '2px',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.4)',
+                fontSize: '12.5px',
+                lineHeight: '1.45',
+                boxSizing: 'border-box',
+                fontFamily: selectedTemplate === 'classic' ? 'Georgia, serif' : selectedTemplate === 'tech' ? 'Inter, sans-serif' : 'Trebuchet MS, sans-serif',
+              }}
+            >
+              {/* Header block */}
+              <div style={{
+                textAlign: selectedTemplate === 'classic' ? 'center' : 'left',
+                borderBottom: selectedTemplate === 'creative' ? 'none' : '2px solid #333333',
+                borderLeft: selectedTemplate === 'creative' ? '4px solid #6366f1' : 'none',
+                paddingLeft: selectedTemplate === 'creative' ? '12px' : '0',
+                paddingBottom: '10px',
+                marginBottom: '18px',
+              }}>
+                <h1 style={{
+                  fontSize: '24px',
+                  fontWeight: 800,
+                  margin: 0,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  color: selectedTemplate === 'creative' ? '#6366f1' : '#111111'
+                }}>
+                  {resumeData.personalInfo.name || 'Your Name'}
+                </h1>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#444444',
+                  marginTop: '5px',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  justifyContent: selectedTemplate === 'classic' ? 'center' : 'flex-start',
+                  gap: '8px 12px'
+                }}>
+                  {resumeData.personalInfo.email && <span>✉ {resumeData.personalInfo.email}</span>}
+                  {resumeData.personalInfo.phone && <span>📞 {resumeData.personalInfo.phone}</span>}
+                  {resumeData.personalInfo.location && <span>📍 {resumeData.personalInfo.location}</span>}
+                  {resumeData.personalInfo.linkedIn && <span>🔗 {resumeData.personalInfo.linkedIn}</span>}
+                  {resumeData.personalInfo.github && <span>💻 {resumeData.personalInfo.github}</span>}
+                </div>
+              </div>
+
+              {/* Professional Summary */}
+              {resumeData.professionalSummary && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    borderBottom: '1px solid #dddddd',
+                    paddingBottom: '3px',
+                    marginBottom: '8px',
+                    color: selectedTemplate === 'creative' ? '#6366f1' : '#222222',
+                  }}>
+                    Professional Summary
+                  </div>
+                  <p style={{ margin: 0, fontSize: '11.5px', color: '#333333', textAlign: 'justify' }}>{resumeData.professionalSummary}</p>
+                </div>
+              )}
+
+              {/* Work Experience */}
+              {resumeData.workExperience.some(j => j.company) && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    borderBottom: '1px solid #dddddd',
+                    paddingBottom: '3px',
+                    marginBottom: '8px',
+                    color: selectedTemplate === 'creative' ? '#6366f1' : '#222222',
+                  }}>
+                    Work Experience
+                  </div>
+                  {resumeData.workExperience.map((job, idx) => job.company && (
+                    <div key={idx} style={{ marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '12px' }}>
+                        <span style={{ color: '#111111' }}>{job.title}</span>
+                        <span style={{ color: '#555555', fontWeight: 500 }}>{job.duration}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontStyle: 'italic', fontSize: '11px', color: '#555555', marginBottom: '3px' }}>
+                        <span>{job.company}</span>
+                      </div>
+                      <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '11.5px', color: '#333333' }}>
+                        {job.bullets.map((b, bi) => b && (
+                          <li key={bi} style={{ marginBottom: '2px' }}>{b}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Skills */}
+              {resumeData.skills.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    borderBottom: '1px solid #dddddd',
+                    paddingBottom: '3px',
+                    marginBottom: '6px',
+                    color: selectedTemplate === 'creative' ? '#6366f1' : '#222222',
+                  }}>
+                    Skills & Technologies
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: '#222222', fontWeight: 500 }}>
+                    {resumeData.skills.join(', ')}
+                  </div>
+                </div>
+              )}
+
+              {/* Projects */}
+              {resumeData.projects.some(p => p.name) && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    borderBottom: '1px solid #dddddd',
+                    paddingBottom: '3px',
+                    marginBottom: '8px',
+                    color: selectedTemplate === 'creative' ? '#6366f1' : '#222222',
+                  }}>
+                    Projects
+                  </div>
+                  {resumeData.projects.map((proj, idx) => proj.name && (
+                    <div key={idx} style={{ marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '12px' }}>
+                        <span style={{ color: '#111111' }}>{proj.name}</span>
+                        {proj.techStack && <span style={{ fontWeight: 500, fontSize: '11px', fontStyle: 'italic', color: '#555555' }}>({proj.techStack})</span>}
+                      </div>
+                      <p style={{ margin: '3px 0 0 0', fontSize: '11.5px', color: '#333333', textAlign: 'justify' }}>{proj.description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Education */}
+              {resumeData.education.some(e => e.degree) && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    borderBottom: '1px solid #dddddd',
+                    paddingBottom: '3px',
+                    marginBottom: '8px',
+                    color: selectedTemplate === 'creative' ? '#6366f1' : '#222222',
+                  }}>
+                    Education
+                  </div>
+                  {resumeData.education.map((edu, idx) => edu.degree && (
+                    <div key={idx} style={{ marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '12px' }}>
+                        <span style={{ color: '#111111' }}>{edu.degree}</span>
+                        <span style={{ color: '#555555', fontWeight: 500 }}>{edu.year}</span>
+                      </div>
+                      <div style={{ fontStyle: 'italic', fontSize: '11px', color: '#555555' }}>
+                        {edu.institution} {edu.cgpa && ` | CGPA: ${edu.cgpa}`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Certifications */}
+              {resumeData.certifications.some(c => c.name) && (
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    borderBottom: '1px solid #dddddd',
+                    paddingBottom: '3px',
+                    marginBottom: '6px',
+                    color: selectedTemplate === 'creative' ? '#6366f1' : '#222222',
+                  }}>
+                    Certifications
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '11.5px', color: '#333333' }}>
+                    {resumeData.certifications.map((cert, idx) => cert.name && (
+                      <li key={idx} style={{ marginBottom: '2px' }}>
+                        <strong>{cert.name}</strong> {cert.issuer && ` - ${cert.issuer}`} {cert.year && ` (${cert.year})`}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          {/* Print/Download Trigger */}
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+            <button
+              onClick={handlePrintResume}
+              className="btn-glow"
+              style={{
+                padding: '12px 32px',
+                background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-cyan) 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 700,
+                fontSize: '13.5px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontFamily: 'var(--font-title)',
+              }}
+            >
+              <Printer size={15} />
+              Print / Save PDF
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === 'editor' && (
         // Dynamic Editor Form
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
           
@@ -1367,17 +1713,15 @@ export const ResumeEditor = ({ analysis }) => {
       )}
 
       {/* Hidden printable A4 layout area that only renders on window.print() */}
-      <div id="print-layout-area" style={{ display: 'none' }}>
+      <div id="print-layout-area" className={`template-${selectedTemplate}`} style={{ display: 'none' }}>
         <div className="print-header">
           <h1>{resumeData.personalInfo.name || 'Your Name'}</h1>
           <div className="print-contact">
-            {resumeData.personalInfo.email && `Email: ${resumeData.personalInfo.email}`}
-            {resumeData.personalInfo.phone && `  |  Phone: ${resumeData.personalInfo.phone}`}
-            {resumeData.personalInfo.location && `  |  Location: ${resumeData.personalInfo.location}`}
-          </div>
-          <div className="print-contact" style={{ marginTop: '4px' }}>
-            {resumeData.personalInfo.linkedIn && `LinkedIn: ${resumeData.personalInfo.linkedIn}`}
-            {resumeData.personalInfo.github && `  |  GitHub: ${resumeData.personalInfo.github}`}
+            {resumeData.personalInfo.email && `✉ ${resumeData.personalInfo.email}`}
+            {resumeData.personalInfo.phone && `  |  📞 ${resumeData.personalInfo.phone}`}
+            {resumeData.personalInfo.location && `  |  📍 ${resumeData.personalInfo.location}`}
+            {resumeData.personalInfo.linkedIn && `  |  🔗 ${resumeData.personalInfo.linkedIn}`}
+            {resumeData.personalInfo.github && `  |  💻 ${resumeData.personalInfo.github}`}
           </div>
         </div>
 

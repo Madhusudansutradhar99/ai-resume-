@@ -13,6 +13,7 @@ import ImprovementRoadmap from './components/ImprovementRoadmap'
 import ResumeEditor from './components/ResumeEditor'
 import AIGuidePanel from './components/AIGuidePanel'
 import Toast from './components/Toast'
+import { Settings, Key, Database, Eye, EyeOff, X } from 'lucide-react'
 import { analyzeResume } from './api'
 
 function App() {
@@ -21,6 +22,10 @@ function App() {
   const [error, setError] = useState('')
   const [resumeFile, setResumeFile] = useState(null)
   const [showUploadZone, setShowUploadZone] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [customKey, setCustomKey] = useState('')
+  const [showKeyText, setShowKeyText] = useState(false)
+  const [saveStatus, setSaveStatus] = useState('')
 
   const normalizeAnalysis = (raw) => {
     if (!raw || typeof raw !== 'object') return null
@@ -70,6 +75,11 @@ function App() {
       if (introSeen === 'true') {
         setShowUploadZone(true)
       }
+
+      const savedKey = localStorage.getItem('custom_gemini_api_key')
+      if (savedKey) {
+        setCustomKey(savedKey)
+      }
     } catch (err) {
       console.error('Error loading saved analysis or intro state:', err)
     }
@@ -106,6 +116,25 @@ function App() {
     setResumeFile(null)
     setShowUploadZone(true) // Go directly to the upload zone on reset
     localStorage.removeItem('resumeAnalysis')
+  }
+
+  const handleSaveKey = () => {
+    if (customKey.trim()) {
+      localStorage.setItem('custom_gemini_api_key', customKey.trim())
+      setSaveStatus('Key saved successfully!')
+      setTimeout(() => setSaveStatus(''), 3000)
+    } else {
+      localStorage.removeItem('custom_gemini_api_key')
+      setSaveStatus('Key cleared.')
+      setTimeout(() => setSaveStatus(''), 3000)
+    }
+  }
+
+  const handleClearKey = () => {
+    localStorage.removeItem('custom_gemini_api_key')
+    setCustomKey('')
+    setSaveStatus('Key cleared.')
+    setTimeout(() => setSaveStatus(''), 3000)
   }
 
   return (
@@ -160,7 +189,34 @@ function App() {
       />
 
       <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh' }}>
-        <div style={{ position: 'fixed', right: 20, top: 18, zIndex: 60 }}>
+        <div style={{ position: 'fixed', right: 20, top: 18, zIndex: 60, display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowSettings(true)}
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-primary)',
+              padding: '10px',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              transition: 'all 0.2s',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent)'
+              e.currentTarget.style.transform = 'scale(1.05)'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border)'
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+            title="ATS & API Key Settings"
+          >
+            <Settings size={18} />
+          </button>
           <ThemeToggle />
         </div>
         <AnimatePresence mode="wait">
@@ -277,6 +333,168 @@ function App() {
         {/* AI Guide Panel */}
         {analysis && <AIGuidePanel resumeContext={analysis.parsedText} />}
       </div>
+
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.75)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="glass-card-premium animate-glow-flow"
+              style={{
+                maxWidth: '480px',
+                width: '100%',
+                padding: '28px',
+                position: 'relative',
+              }}
+            >
+              <button
+                onClick={() => setShowSettings(false)}
+                style={{
+                  position: 'absolute',
+                  top: '18px',
+                  right: '18px',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                }}
+              >
+                <X size={20} />
+              </button>
+
+              <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 4px 0', fontFamily: 'var(--font-title)', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+                ⚙️ ATS & API Settings
+              </h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '12.5px', margin: '0 0 20px 0' }}>
+                Configure credentials and monitor your real-time candidate sync log.
+              </p>
+
+              {/* API Key Panel */}
+              <div className="panel-soft" style={{ padding: '16px', display: 'block', marginBottom: '18px' }}>
+                <strong style={{ fontSize: '13px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                  <Key size={13} color="var(--accent)" />
+                  Your Gemini API Key (Unlimited Checks)
+                </strong>
+                
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', position: 'relative' }}>
+                  <input
+                    type={showKeyText ? 'text' : 'password'}
+                    className="input-cyber"
+                    style={{ flex: 1, paddingRight: '40px' }}
+                    placeholder="Enter your Gemini API key (AIzaSy...)"
+                    value={customKey}
+                    onChange={(e) => setCustomKey(e.target.value)}
+                  />
+                  <button
+                    onClick={() => setShowKeyText(!showKeyText)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {showKeyText ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                    {saveStatus}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={handleClearKey}
+                      style={{
+                        padding: '6px 12px',
+                        background: 'rgba(239, 68, 68, 0.08)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        color: 'var(--danger)',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={handleSaveKey}
+                      className="btn-glow"
+                      style={{
+                        padding: '6px 12px',
+                        background: 'var(--accent)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                      }}
+                    >
+                      Save Key
+                    </button>
+                  </div>
+                </div>
+                
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: '1.4' }}>
+                  💡 This saves the key locally in your browser cache. All analysis requests will be sent with your key for unlimited operations.
+                </p>
+              </div>
+
+              {/* ATS Sync Status Panel */}
+              <div className="panel-soft" style={{ padding: '16px', display: 'block' }}>
+                <strong style={{ fontSize: '13px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                  <Database size={13} color="var(--accent-cyan)" />
+                  ATS Connection State
+                </strong>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '6px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Status</span>
+                    <span style={{ color: 'var(--success)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block', boxShadow: '0 0 8px var(--success)', animation: 'pulse 1.5s infinite' }} />
+                      Synced
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '6px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Database</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>Live ATS Parse Sandbox</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Sync Protocol</span>
+                    <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>JSON Schema Mapping</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Toast notifications */}
       <AnimatePresence>

@@ -14,9 +14,9 @@ def get_anthropic_key():
         return key.strip()
     return None
 
-def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_search: bool = False) -> str:
-    """Universal wrapper to call AI using Gemini (prefered) or Claude (fallback)"""
-    gemini_key = get_gemini_key()
+def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_search: bool = False, api_key: str = None) -> str:
+    """Universal wrapper to call AI using Gemini (preferred) or Claude (fallback)"""
+    gemini_key = api_key or get_gemini_key()
     if gemini_key:
         try:
             genai.configure(api_key=gemini_key)

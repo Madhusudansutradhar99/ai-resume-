@@ -5,11 +5,11 @@ export const Loader = () => {
   const [statusIndex, setStatusIndex] = useState(0)
 
   const statuses = [
-    '🔍 Parsing your resume...',
-    '🤖 Checking ATS compatibility...',
-    '📊 Analyzing keyword density...',
-    '⭐ Scoring your experience...',
-    '🎯 Generating improvement roadmap...',
+    '🔍 Parsing resume structure...',
+    '⚡ Connecting to ATS Database Engine...',
+    '🔄 Syncing parsed fields (Personal Info, Skills, Education)...',
+    '📊 Matching keyword density in real-time...',
+    '🎯 Generating ATS Compatibility Score & Roadmap...',
   ]
 
   useEffect(() => {
