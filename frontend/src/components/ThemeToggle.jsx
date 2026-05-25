@@ -2,20 +2,26 @@ import React, { useEffect, useState } from 'react'
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem('theme') || 'dark' } catch { return 'dark' }
+    try {
+      const saved = localStorage.getItem('theme')
+      // Map any obsolete themes from cache to a valid theme
+      if (saved === 'emerald' || saved === 'rose') return 'dark'
+      return saved || 'dark'
+    } catch {
+      return 'dark'
+    }
   })
 
-  const themes = ['dark', 'light', 'emerald', 'rose']
+  const themes = ['dark', 'light', 'blue']
   const themeLabels = { 
     dark: '🌙 Cyberpunk', 
     light: '☀️ Light', 
-    emerald: '🟢 Matrix Green', 
-    rose: '🌅 Sunset Aurora' 
+    blue: '🔵 Deep Blue'
   }
 
   useEffect(() => {
     const root = document.documentElement
-    root.classList.remove('theme-dark', 'theme-light', 'theme-blue', 'theme-emerald', 'theme-rose')
+    root.classList.remove('theme-dark', 'theme-light', 'theme-blue')
     root.classList.add(`theme-${theme}`)
     try { localStorage.setItem('theme', theme) } catch {}
 
@@ -52,35 +58,20 @@ export default function ThemeToggle() {
           '--accent-violet': '#8b5cf6',
           '--glow-shadow': 'rgba(79, 70, 229, 0.08)'
         },
-        emerald: {
-          '--bg-page': '#020705',
-          '--bg-primary': '#020705',
-          '--bg-secondary': '#05120a',
-          '--text-primary': '#ecfdf5',
-          '--text-muted': '#6ee7b7',
-          '--card-bg': 'rgba(4, 18, 12, 0.75)',
-          '--card-border': 'rgba(16, 185, 129, 0.15)',
-          '--bg-card': 'rgba(4, 18, 12, 0.75)',
-          '--border': 'rgba(16, 185, 129, 0.15)',
-          '--accent': '#059669',
-          '--accent-cyan': '#10b981',
-          '--accent-violet': '#34d399',
-          '--glow-shadow': 'rgba(16, 185, 129, 0.18)'
-        },
-        rose: {
-          '--bg-page': '#090406',
-          '--bg-primary': '#090406',
-          '--bg-secondary': '#160a0f',
-          '--text-primary': '#fff1f2',
-          '--text-muted': '#fda4af',
-          '--card-bg': 'rgba(22, 10, 15, 0.75)',
-          '--card-border': 'rgba(244, 63, 94, 0.15)',
-          '--bg-card': 'rgba(22, 10, 15, 0.75)',
-          '--border': 'rgba(244, 63, 94, 0.15)',
-          '--accent': '#e11d48',
-          '--accent-cyan': '#f43f5e',
-          '--accent-violet': '#fb7185',
-          '--glow-shadow': 'rgba(244, 63, 94, 0.18)'
+        blue: {
+          '--bg-page': '#0b1528',
+          '--bg-primary': '#0b1528',
+          '--bg-secondary': '#080d1a',
+          '--text-primary': '#e0f2fe',
+          '--text-muted': '#7dd3fc',
+          '--card-bg': 'rgba(11, 21, 40, 0.7)',
+          '--card-border': 'rgba(14, 165, 233, 0.15)',
+          '--bg-card': 'rgba(11, 21, 40, 0.7)',
+          '--border': 'rgba(14, 165, 233, 0.15)',
+          '--accent': '#0284c7',
+          '--accent-cyan': '#38bdf8',
+          '--accent-violet': '#818cf8',
+          '--glow-shadow': 'rgba(14, 165, 233, 0.2)'
         }
       }
       const vars = themeConfigs[theme] || themeConfigs.dark
@@ -91,13 +82,14 @@ export default function ThemeToggle() {
 
   const cycle = () => {
     const currentIdx = themes.indexOf(theme)
-    const nextTheme = themes[(currentIdx + 1) % themes.length]
+    const safeIdx = currentIdx === -1 ? 0 : currentIdx
+    const nextTheme = themes[(safeIdx + 1) % themes.length]
     setTheme(nextTheme)
   }
 
   return (
     <button onClick={cycle} className="small-badge" style={{ cursor: 'pointer' }}>
-      {themeLabels[theme]}
+      {themeLabels[theme] || '🌙 Cyberpunk'}
     </button>
   )
 }
