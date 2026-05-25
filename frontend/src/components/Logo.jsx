@@ -5,58 +5,59 @@ export default function Logo({ size = 48, showText = true, layout = 'column' }) 
 
   return (
     <div 
+      className="logo-container"
       style={{ 
         display: 'inline-flex', 
         flexDirection: isRow ? 'row' : 'column', 
         alignItems: 'center', 
         justifyContent: 'center',
-        gap: isRow ? '14px' : '8px',
+        gap: isRow ? '12px' : '8px',
         textAlign: isRow ? 'left' : 'center'
       }}
     >
       <svg 
+        className="logo-svg"
         width={size} 
         height={size} 
         viewBox="0 0 100 100" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
-        style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.15))' }}
+        style={{ 
+          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.12))',
+          flexShrink: 0
+        }}
       >
-        {/* Stylized 'm' logo */}
+        {/* Continuous fluid 'm' logo using lines and paths with identical stroke properties */}
         {/* Left vertical stem */}
-        <rect x="25" y="36" width="10" height="28" rx="5" fill="white" />
+        <line x1="30" y1="38" x2="30" y2="68" stroke="white" strokeWidth="10" strokeLinecap="round" />
+        
         {/* Middle vertical stem */}
-        <rect x="45" y="42" width="10" height="30" rx="5" fill="white" />
+        <line x1="50" y1="44" x2="50" y2="74" stroke="white" strokeWidth="10" strokeLinecap="round" />
+        
         {/* Right vertical stem */}
-        <rect x="65" y="36" width="10" height="22" rx="5" fill="white" />
+        <line x1="70" y1="38" x2="70" y2="58" stroke="white" strokeWidth="10" strokeLinecap="round" />
+        
         {/* Arches connecting the stems */}
         <path 
-          d="M25 36 C 25 22, 45 22, 45 36" 
+          d="M 30 38 C 30 22, 50 22, 50 44" 
           stroke="white" 
           strokeWidth="10" 
           strokeLinecap="round" 
           fill="none" 
         />
         <path 
-          d="M45 42 C 45 24, 65 24, 65 30" 
+          d="M 50 44 C 50 24, 70 24, 70 38" 
           stroke="white" 
           strokeWidth="10" 
           strokeLinecap="round" 
           fill="none" 
         />
-        {/* Tilted pill under the right leg */}
-        <rect 
-          x="62" 
-          y="68" 
-          width="16" 
-          height="8" 
-          rx="4" 
-          transform="rotate(-15 62 68)" 
-          fill="white" 
-        />
+        
+        {/* Underline/pill under the right stem */}
+        <line x1="60" y1="74" x2="78" y2="69" stroke="white" strokeWidth="9" strokeLinecap="round" />
       </svg>
       {showText && (
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div className="logo-text" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div 
             style={{ 
               fontFamily: 'Syne, sans-serif', 

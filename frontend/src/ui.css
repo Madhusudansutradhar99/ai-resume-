@@ -596,3 +596,42 @@ body {
 .theme-light .decor-ring::after {
   border-color: rgba(99, 102, 241, 0.08);
 }
+
+/* Responsive adjustments for mobile devices */
+.navbar-header {
+  padding: 24px 40px;
+}
+
+.hero-title {
+  font-size: 64px;
+}
+
+.hero-desc {
+  font-size: 20px;
+}
+
+@media (max-width: 768px) {
+  .navbar-header {
+    padding: 16px 20px;
+  }
+  .hero-title {
+    font-size: 38px !important;
+    line-height: 1.25 !important;
+  }
+  .hero-desc {
+    font-size: 16px !important;
+  }
+  .timeline-horizontal-line {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-text {
+    display: none !important;
+  }
+  .logo-svg {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}

@@ -141,12 +141,12 @@ export default function LandingPage({ onAnalyze, isLoading }) {
 
       {/* Header Navbar */}
       <header 
+        className="navbar-header"
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          padding: '24px 40px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -194,9 +194,8 @@ export default function LandingPage({ onAnalyze, isLoading }) {
 
         {/* Shifting Gradient Title */}
         <h1
-          className="text-gradient-flow"
+          className="text-gradient-flow hero-title"
           style={{
-            fontSize: '64px',
             fontWeight: 800,
             lineHeight: '1.15',
             marginBottom: '24px',
@@ -207,15 +206,17 @@ export default function LandingPage({ onAnalyze, isLoading }) {
           Build a Resume That<br />Recruiters Actually Read
         </h1>
         
-        <p style={{
-          fontSize: '20px',
-          color: 'var(--text-muted)',
-          marginBottom: '36px',
-          maxWidth: '720px',
-          margin: '0 auto 36px',
-          lineHeight: '1.6',
-          fontFamily: "var(--font-body)"
-        }}>
+        <p 
+          className="hero-desc"
+          style={{
+            color: 'var(--text-muted)',
+            marginBottom: '36px',
+            maxWidth: '720px',
+            margin: '0 auto 36px',
+            lineHeight: '1.6',
+            fontFamily: "var(--font-body)"
+          }}
+        >
           Upload your resume to instantly extract structured sections, receive dynamic ATS grading, and optimize bullet points with target AI suggestions.
         </p>
 
@@ -251,7 +252,7 @@ export default function LandingPage({ onAnalyze, isLoading }) {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '28px'
         }}>
           {features.map((feature, idx) => {
