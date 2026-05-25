@@ -4,6 +4,7 @@ import './ui.css'
 import LandingPage from './components/LandingPage'
 import UploadZone from './components/UploadZone'
 import ThemeToggle from './components/ThemeToggle'
+import Logo from './components/Logo'
 import Loader from './components/Loader'
 import ScoreCard from './components/ScoreCard'
 import CareerFitPanel from './components/CareerFitPanel'
@@ -84,6 +85,8 @@ function App() {
   const handleAnalyze = async (file, jobDescription) => {
     setError('')
     setIsLoading(true)
+    localStorage.setItem('introSeen', 'true')
+    setShowUploadZone(true)
 
     try {
       const result = await analyzeResume(file, jobDescription)
@@ -183,26 +186,32 @@ function App() {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   marginBottom: '40px',
+                  flexWrap: 'wrap',
+                  gap: '20px'
                 }}
               >
-                <div>
-                  <h1
-                    style={{
-                      fontSize: '32px',
-                      fontWeight: 700,
-                      marginBottom: '8px',
-                      background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-cyan) 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                      margin: 0,
-                    }}
-                  >
-                    📊 Your Resume Analysis
-                  </h1>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
-                    {resumeFile?.name}
-                  </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+                  <Logo size={42} showText={false} />
+                  <div>
+                    <h1
+                      style={{
+                        fontSize: '30px',
+                        fontWeight: 800,
+                        background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-cyan) 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        margin: 0,
+                        fontFamily: 'var(--font-title)',
+                        letterSpacing: '-0.5px'
+                      }}
+                    >
+                      Your Resume Analysis
+                    </h1>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '13.5px', margin: '4px 0 0' }}>
+                      {resumeFile?.name || 'Loaded from History'}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={handleReset}
@@ -239,9 +248,29 @@ function App() {
                 />
                 <ResumeEditor analysis={analysis} />
               </div>
-            </motion.div>          ) : !showUploadZone ? (
-            <LandingPage key="landing" onStartClick={handleStartFromLanding} />          ) : (
-            <UploadZone key="upload" onAnalyze={handleAnalyze} isLoading={isLoading} />
+            </motion.div>
+          ) : !showUploadZone ? (
+            <LandingPage key="landing" onAnalyze={handleAnalyze} isLoading={isLoading} />
+          ) : (
+            <div 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                minHeight: '100vh', 
+                padding: '60px 20px', 
+                position: 'relative', 
+                zIndex: 10,
+                maxWidth: '650px',
+                margin: '0 auto'
+              }}
+            >
+              <div style={{ marginBottom: '40px', textAlign: 'center' }}>
+                <Logo size={64} showText={true} />
+              </div>
+              <UploadZone onAnalyze={handleAnalyze} isLoading={isLoading} />
+            </div>
           )}
         </AnimatePresence>
 

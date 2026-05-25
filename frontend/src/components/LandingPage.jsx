@@ -1,8 +1,13 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Zap, TrendingUp, Brain, FileText, Target, Sparkles, ArrowRight, ShieldCheck, Star } from 'lucide-react'
+import Logo from './Logo'
+import UploadZone from './UploadZone'
 
-export default function LandingPage({ onStartClick }) {
+export default function LandingPage({ onAnalyze, isLoading }) {
+  const handleScrollToUpload = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
   const features = [
     {
       icon: Brain,
@@ -134,9 +139,33 @@ export default function LandingPage({ onStartClick }) {
         </motion.div>
       ))}
 
+      {/* Header Navbar */}
+      <header 
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: '24px 40px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 50,
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}
+      >
+        <Logo size={40} showText={true} layout="row" />
+      </header>
+
       {/* Hero Section */}
-      <div style={{ position: 'relative', zIndex: 2, padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
+      <div style={{ position: 'relative', zIndex: 2, padding: '140px 20px 60px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
         
+        {/* Large Centered Logo */}
+        <div style={{ marginBottom: '32px' }}>
+          <Logo size={80} showText={true} />
+        </div>
+
         {/* Glowing Top Intro Badge */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -190,29 +219,10 @@ export default function LandingPage({ onStartClick }) {
           Upload your resume to instantly extract structured sections, receive dynamic ATS grading, and optimize bullet points with target AI suggestions.
         </p>
 
-        {/* Premium CTA Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onStartClick}
-          className="btn-glow"
-          style={{
-            background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-cyan) 100%)',
-            color: 'white',
-            border: 'none',
-            padding: '20px 48px',
-            fontSize: '16.5px',
-            fontWeight: 700,
-            borderRadius: '14px',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontFamily: "var(--font-title)"
-          }}
-        >
-          Start Analyzing Now <ArrowRight size={18} />
-        </motion.button>
+        {/* Embedded UploadZone */}
+        <div style={{ marginTop: '48px', marginBottom: '32px' }}>
+          <UploadZone onAnalyze={onAnalyze} isLoading={isLoading} />
+        </div>
       </div>
 
       {/* Features Grid Section */}
@@ -468,7 +478,7 @@ export default function LandingPage({ onStartClick }) {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={onStartClick}
+            onClick={handleScrollToUpload}
             className="btn-glow"
             style={{
               background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-cyan) 100%)',
@@ -487,7 +497,7 @@ export default function LandingPage({ onStartClick }) {
               fontFamily: "var(--font-title)"
             }}
           >
-            Start Scanning Now <ArrowRight size={18} />
+            Upload Your Resume Now <ArrowRight size={18} />
           </motion.button>
         </motion.div>
       </div>
