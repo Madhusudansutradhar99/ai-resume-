@@ -34,11 +34,17 @@ export const AIGuidePanel = ({ resumeContext }) => {
     setIsLoading(true)
 
     try {
+      const customKey = localStorage.getItem('custom_gemini_api_key')
+      const headers = { 'Content-Type': 'application/json' }
+      if (customKey) {
+        headers['X-Gemini-API-Key'] = customKey
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/chat`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             messages: [...messages, userMessage],
             resumeContext,
