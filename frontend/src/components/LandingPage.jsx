@@ -101,6 +101,7 @@ export default function LandingPage({ onAnalyze, isLoading }) {
       {floatingTags.map((tag, idx) => (
         <motion.div
           key={idx}
+          className="floating-badge-desktop"
           animate={{
             y: [0, -15, 0],
             x: [0, 8, 0],

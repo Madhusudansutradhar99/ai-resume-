@@ -13,7 +13,7 @@ import ImprovementRoadmap from './components/ImprovementRoadmap'
 import ResumeEditor from './components/ResumeEditor'
 import AIGuidePanel from './components/AIGuidePanel'
 import Toast from './components/Toast'
-import { Settings, Key, Database, Eye, EyeOff, X } from 'lucide-react'
+import { Settings, Key, Database, Eye, EyeOff, X, AlertTriangle } from 'lucide-react'
 import { analyzeResume } from './api'
 
 function App() {
@@ -318,6 +318,43 @@ function App() {
                   ↻ Upload Another Resume
                 </button>
               </div>
+
+              {analysis.isFallback && (
+                <div
+                  className="panel-soft"
+                  style={{
+                    background: 'rgba(245, 158, 11, 0.08)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    marginBottom: '28px',
+                    display: 'flex',
+                    gap: '14px',
+                    alignItems: 'center',
+                    boxShadow: '0 8px 32px rgba(245, 158, 11, 0.1)',
+                  }}
+                >
+                  <div style={{
+                    background: 'rgba(245, 158, 11, 0.15)',
+                    borderRadius: '50%',
+                    padding: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <AlertTriangle size={20} color="#fbbf24" />
+                  </div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <strong style={{ display: 'block', fontSize: '14px', color: '#fbbf24', marginBottom: '4px', fontFamily: 'var(--font-title)' }}>
+                      ⚠️ Offline Mode: Basic heuristic scanner active
+                    </strong>
+                    <span style={{ fontSize: '12.5px', color: 'var(--text-primary)', opacity: 0.9, lineHeight: '1.4' }}>
+                      Server key configuration missing ya invalid hai, isliye basic local scanner use ho raha hai jo project details ya recommendations ko deeply analyze nahi kar sakta. <strong>Deep AI Analysis aur proper guidance</strong> activate karne ke liye, right-top settings (⚙️) pe click karein aur apna **Gemini API Key** ya **GitHub Token** save karein.
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Results Grid */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>

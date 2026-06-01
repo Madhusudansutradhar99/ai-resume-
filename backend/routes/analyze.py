@@ -596,6 +596,7 @@ async def analyze_resume(
             result["overallScore"] = max(15, min(95, overall))
             result["parsedText"] = text
             result["atsReport"] = ats_report
+            result["isFallback"] = False
             return AnalysisResponse(**result)
         except Exception as e:
             print(f"JSON Parsing failed: {str(e)}. Response: {response_text}")
@@ -605,6 +606,7 @@ async def analyze_resume(
         result = _build_fallback_analysis(text, jobDescription, ats_report)
         result["parsedText"] = text
         result["atsReport"] = ats_report
+        result["isFallback"] = True
         return AnalysisResponse(**result)
 
 

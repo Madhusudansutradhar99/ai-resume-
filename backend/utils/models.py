@@ -110,6 +110,7 @@ class AnalysisResponse(BaseModel):
     structuredResume: ParsedResumeStructure = Field(default_factory=ParsedResumeStructure)
     summary: str
     parsedText: str
+    isFallback: Optional[bool] = False
 
 
 
