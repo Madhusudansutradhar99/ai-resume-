@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://l
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 30000,
+  timeout: 90000,
 })
 
 // Inject custom Gemini / GitHub API key if present in localStorage

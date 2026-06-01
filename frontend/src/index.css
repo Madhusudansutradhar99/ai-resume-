@@ -107,6 +107,15 @@ code, pre {
   }
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes pulse-glow {
   0%, 100% {
     opacity: 1;
