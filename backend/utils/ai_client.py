@@ -34,6 +34,10 @@ def get_github_token(client_token: str = None) -> str:
     if token:
         return token.strip()
         
+    # Skip git credential check in server/serverless production environments to prevent blocking hangs
+    if os.getenv("VERCEL") or os.getenv("RENDER") or os.getenv("PORT") or os.getenv("K_SERVICE"):
+        return None
+        
     # Attempt to read from Git Credential Manager
     try:
         proc = subprocess.Popen(
@@ -43,12 +47,16 @@ def get_github_token(client_token: str = None) -> str:
             stderr=subprocess.PIPE,
             text=True
         )
-        stdout, _ = proc.communicate(input="protocol=https\nhost=github.com\n")
-        for line in stdout.splitlines():
-            if line.startswith("password="):
-                tok = line.split("=", 1)[1].strip()
-                if tok.startswith("gho_") or tok.startswith("ghp_") or tok.startswith("github_pat_"):
-                    return tok
+        try:
+            stdout, _ = proc.communicate(input="protocol=https\nhost=github.com\n", timeout=2)
+            for line in stdout.splitlines():
+                if line.startswith("password="):
+                    tok = line.split("=", 1)[1].strip()
+                    if tok.startswith("gho_") or tok.startswith("ghp_") or tok.startswith("github_pat_"):
+                        return tok
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            print("Git credential helper timed out.")
     except Exception as e:
         print(f"Failed to retrieve GitHub credential: {str(e)}")
         
