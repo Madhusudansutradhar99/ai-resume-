@@ -387,6 +387,7 @@ function App() {
             >
               <div style={{ marginBottom: '40px', textAlign: 'center' }}>
                 <Logo size={64} showText={true} />
+              </div>
               <UploadZone 
                 onAnalyze={handleAnalyze} 
                 isLoading={isLoading} 
