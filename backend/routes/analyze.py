@@ -489,18 +489,62 @@ async def analyze_resume(
     if not resume.filename:
         raise HTTPException(status_code=400, detail="File must have a name")
     
-    # Extract text based on file type
+    # Extract text based on magic bytes or file extension with cross-fallback
     filename_lower = resume.filename.lower()
-    if filename_lower.endswith(".pdf"):
+    is_pdf_magic = content.startswith(b"%PDF")
+    is_docx_magic = content.startswith(b"PK\x03\x04")
+    
+    text = ""
+    file_type = ""
+    
+    if is_pdf_magic or (not is_docx_magic and filename_lower.endswith(".pdf")):
+        # Try PDF parsing first
         try:
             text = extract_text_from_pdf(content)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-    elif filename_lower.endswith(".docx"):
+            file_type = "PDF"
+        except Exception as e_pdf:
+            # Fallback to DOCX parsing in case of renamed files
+            try:
+                text = extract_text_from_docx(content)
+                file_type = "Word document"
+            except Exception:
+                # Final fallback: Try decoding as plain text
+                try:
+                    decoded = content.decode("utf-8", errors="ignore")
+                    if len(decoded.strip()) >= 100:
+                        text = decoded
+                        file_type = "plain text"
+                    else:
+                        raise ValueError("Text too short")
+                except Exception:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Failed to extract text from PDF: {str(e_pdf)}"
+                    )
+    elif is_docx_magic or filename_lower.endswith(".docx"):
+        # Try DOCX parsing first
         try:
             text = extract_text_from_docx(content)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            file_type = "Word document"
+        except Exception as e_docx:
+            # Fallback to PDF parsing in case of renamed files
+            try:
+                text = extract_text_from_pdf(content)
+                file_type = "PDF"
+            except Exception:
+                # Final fallback: Try decoding as plain text
+                try:
+                    decoded = content.decode("utf-8", errors="ignore")
+                    if len(decoded.strip()) >= 100:
+                        text = decoded
+                        file_type = "plain text"
+                    else:
+                        raise ValueError("Text too short")
+                except Exception:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Failed to extract text from Word document: {str(e_docx)}"
+                    )
     else:
         raise HTTPException(
             status_code=400,
@@ -508,11 +552,11 @@ async def analyze_resume(
         )
     
     # Validate extracted text
-    if len(text.strip()) < 100:
-        file_type = "PDF" if filename_lower.endswith(".pdf") else "Word document"
+    if not text or len(text.strip()) < 100:
+        actual_type = file_type or ("PDF" if filename_lower.endswith(".pdf") else "Word document")
         raise HTTPException(
             status_code=400,
-            detail=f"Could not extract meaningful text from the {file_type}. Please ensure the file is not empty and contains selectable text (not scanned images)."
+            detail=f"Could not extract meaningful text from the {actual_type}. Please ensure the file is not empty and contains selectable text (not scanned images)."
         )
     
     # Pre-calculate ATS report (scrapes trends from DuckDuckGo if no JD is provided)
