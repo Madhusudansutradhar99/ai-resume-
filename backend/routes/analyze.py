@@ -639,10 +639,12 @@ async def analyze_resume(
                 
                 return AnalysisResponse(**result)
             except Exception as e_multimodal:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Gemini Multimodal Analysis failed: {str(e_multimodal)}"
-                )
+                print(f"Gemini multimodal analysis failed, using fallback analysis instead: {str(e_multimodal)}")
+                result = _build_fallback_analysis(text, jobDescription, ats_report)
+                result["parsedText"] = text
+                result["atsReport"] = ats_report
+                result["isFallback"] = True
+                return AnalysisResponse(**result)
         
         raise HTTPException(
             status_code=400,
