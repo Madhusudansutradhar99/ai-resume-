@@ -60,6 +60,26 @@ def extract_text_from_docx(file_bytes: bytes) -> str:
                             row_text.append(cell_text)
                     if row_text:
                         text_parts.append(" | ".join(row_text))
-        return "\n".join(text_parts)
+                        
+        extracted_text = "\n".join(text_parts).strip()
+        
+        # Fallback to standard python-docx iteration if ordered parser missed content control elements
+        if len(extracted_text) < 100:
+            text_parts = []
+            for para in doc.paragraphs:
+                if para.text.strip():
+                    text_parts.append(para.text)
+            for table in doc.tables:
+                for row in table.rows:
+                    row_text = []
+                    for cell in row.cells:
+                        cell_text = " ".join(p.text.strip() for p in cell.paragraphs if p.text.strip())
+                        if cell_text:
+                            row_text.append(cell_text)
+                    if row_text:
+                        text_parts.append(" | ".join(row_text))
+            extracted_text = "\n".join(text_parts).strip()
+            
+        return extracted_text
     except Exception as e:
         raise ValueError(f"Failed to extract text from DOCX: {str(e)}")

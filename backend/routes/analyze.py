@@ -509,9 +509,10 @@ async def analyze_resume(
     
     # Validate extracted text
     if len(text.strip()) < 100:
+        file_type = "PDF" if filename_lower.endswith(".pdf") else "Word document"
         raise HTTPException(
             status_code=400,
-            detail="Could not extract meaningful text from the file. Please use a text-based PDF, not a scanned image."
+            detail=f"Could not extract meaningful text from the {file_type}. Please ensure the file is not empty and contains selectable text (not scanned images)."
         )
     
     # Pre-calculate ATS report (scrapes trends from DuckDuckGo if no JD is provided)
