@@ -554,7 +554,7 @@ async def analyze_resume(
     # Validate extracted text
     if not text or len(text.strip()) < 100:
         actual_type = file_type or ("PDF" if filename_lower.endswith(".pdf") else "Word document")
-        gemini_key = x_gemini_api_key or get_gemini_key()
+        gemini_key = get_gemini_key(x_gemini_api_key)
         
         # If it's a PDF and we have a Gemini API key, try Gemini's multimodal PDF understanding!
         if actual_type == "PDF" and gemini_key:
@@ -640,9 +640,17 @@ async def analyze_resume(
                 return AnalysisResponse(**result)
             except Exception as e_multimodal:
                 print(f"Gemini multimodal analysis failed, using fallback analysis instead: {str(e_multimodal)}")
-                result = _build_fallback_analysis(text, jobDescription, ats_report)
-                result["parsedText"] = text
-                result["atsReport"] = ats_report
+                try:
+                    fallback_ats = scan_ats(text, jobDescription) if text else {}
+                except Exception:
+                    fallback_ats = {}
+                result = _build_fallback_analysis(
+                    text or "Scanned PDF (limited text extraction)",
+                    jobDescription,
+                    fallback_ats or None,
+                )
+                result["parsedText"] = text or "Scanned PDF (analyzed via multimodal fallback)"
+                result["atsReport"] = fallback_ats
                 result["isFallback"] = True
                 return AnalysisResponse(**result)
         

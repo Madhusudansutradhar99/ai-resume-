@@ -18,6 +18,7 @@ allowed_origins = [
     "http://localhost:5174",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
+    # Vite may pick 5174 if 5173 is in use
     "http://localhost:3000",
     "https://ai-resume-bice-five.vercel.app",
 ]
@@ -60,8 +61,8 @@ async def health_check():
 async def version():
     """Version endpoint to verify deployments"""
     return {
-        "version": "1.1.2",
-        "commit": "add-version-endpoint",
+        "version": "1.1.3",
+        "commit": "security-and-ai-fallback-fixes",
         "deployed_at": "2026-06-01"
     }
 
@@ -69,7 +70,8 @@ async def version():
 @app.get("/api/list-models")
 async def list_models(x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key")):
     import google.generativeai as genai
-    key = x_gemini_api_key or os.getenv("GEMINI_API_KEY")
+    from utils.ai_client import get_gemini_key
+    key = get_gemini_key(x_gemini_api_key)
     if not key:
         return {"error": "No API key found"}
     try:

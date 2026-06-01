@@ -5,22 +5,30 @@ import subprocess
 import urllib.request
 import json
 
-def get_gemini_key():
-    key = os.getenv("GEMINI_API_KEY")
-    if key and "please-add" not in key and len(key.strip()) > 10:
-        return key.strip()
-    # Obfuscated fallback key to ensure it works out of the box on Render
-    try:
-        # "AIzaSyCDk9d15zoc1dBkQN3Psa5ZtI_Y-HCgv1I" reversed
-        obfuscated = "I1vgCH-Y_ItZ5asP3NQkBd1coz51d9kDCySazIA"
-        return obfuscated[::-1]
-    except Exception:
-        return None
+def _is_valid_api_key(key: str | None, min_len: int = 10) -> bool:
+    if not key:
+        return False
+    k = key.strip()
+    if len(k) < min_len:
+        return False
+    if "please-add" in k.lower() or k.lower().startswith("your_"):
+        return False
+    return True
+
+
+def get_gemini_key(client_key: str | None = None) -> str | None:
+    """Gemini key from client header (AIza*) or GEMINI_API_KEY env — never embedded in source."""
+    if client_key and client_key.strip().startswith("AIza") and _is_valid_api_key(client_key):
+        return client_key.strip()
+    env_key = os.getenv("GEMINI_API_KEY")
+    if _is_valid_api_key(env_key):
+        return env_key.strip()
+    return None
 
 
 def get_anthropic_key():
     key = os.getenv("ANTHROPIC_API_KEY")
-    if key and "please-add" not in key and len(key.strip()) > 10:
+    if _is_valid_api_key(key):
         return key.strip()
     return None
 
@@ -160,8 +168,8 @@ def call_ddg_chat(prompt: str, max_tokens: int = 2000, system: str = None) -> st
     return result_text
 
 def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_search: bool = False, api_key: str = None, github_token: str = None) -> str:
-    """Universal wrapper to call AI using Gemini (preferred), Claude (fallback), or GitHub Models (free fallback)"""
-    gemini_key = api_key or get_gemini_key()
+    """Universal wrapper: Gemini (preferred), Claude, GitHub Models, then DuckDuckGo. Requires env or client Gemini key."""
+    gemini_key = get_gemini_key(api_key)
     if gemini_key:
         try:
             genai.configure(api_key=gemini_key)
@@ -216,9 +224,9 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
         except Exception as e:
             print(f"Gemini API call failed, trying Claude/GitHub... Error: {str(e)}")
     
-    # Fallback to Claude (if key available)
-    anthropic_key = get_github_token(api_key) or get_anthropic_key()
-    if anthropic_key and not anthropic_key.startswith("gho_") and not anthropic_key.startswith("ghp_"):
+    # Fallback to Claude (Anthropic key only — do not confuse with GitHub token)
+    anthropic_key = get_anthropic_key()
+    if anthropic_key:
         try:
             claude_client = Anthropic(api_key=anthropic_key)
             

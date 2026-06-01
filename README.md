@@ -13,10 +13,14 @@ A complete, full-stack web application that analyzes resumes using AI, provides 
   - Overall Readability
 - **🛣️ Improvement Roadmap**: Get a 3-phase actionable roadmap to improve your resume
 - **✏️ Resume Editor**: Edit and refine your resume with AI improvement suggestions
-- **💬 AI Coach Panel**: Chat with an AI resume coach for personalized guidance (streaming responses)
+- **💬 AI Coach Panel**: Streaming SSE chat with live LLM (Gemini → Claude → GitHub Models → DuckDuckGo; offline templates only if all fail)
+- **📊 ATS Report Panel**: Rule-based scanner (keywords, sections, formatting, contact gate)
+- **🧭 Career Fit Panel**: Role detection and career guidance heuristics
+- **🏠 Landing Page**: Marketing intro before the analyzer workflow
+- **⚙️ Settings**: Optional per-browser API keys (demo only — use server env in production)
 - **📥 Download Resume**: Export your edited resume as a plain text file
 - **💾 Local Storage**: Automatically saves your last analysis
-- **🎨 Dark-Themed UI**: Beautiful glassmorphism design with Framer Motion animations
+- **🎨 Dark-Themed UI**: Glassmorphism design with Framer Motion and theme toggle
 - **📱 Responsive**: Works seamlessly on desktop and mobile devices
 
 ## 🛠️ Tech Stack
@@ -35,8 +39,10 @@ A complete, full-stack web application that analyzes resumes using AI, provides 
 - **Python 3.11+** — Language
 - **FastAPI** — Web framework
 - **Uvicorn** — ASGI server
-- **Anthropic SDK** — Claude AI integration
-- **PyMuPDF (fitz)** — PDF extraction
+- **Google Generative AI (Gemini)** — Primary AI (`gemini-2.5-flash` with model fallbacks)
+- **Anthropic SDK** — Optional Claude fallback
+- **GitHub Models / DuckDuckGo Chat** — Additional free-tier fallbacks
+- **pypdf** — PDF text extraction
 - **python-docx** — DOCX extraction
 - **Pydantic v2** — Data validation
 - **python-multipart** — File upload handling
@@ -46,7 +52,8 @@ A complete, full-stack web application that analyzes resumes using AI, provides 
 ### Prerequisites
 - Node.js 16+ and npm
 - Python 3.11+
-- Anthropic API Key (get from https://console.anthropic.com)
+- **Google Gemini API key** (required for AI features) — https://aistudio.google.com/apikey
+- Optional: `ANTHROPIC_API_KEY`, `GITHUB_TOKEN` for fallback providers
 
 ### Backend Setup
 
@@ -68,8 +75,8 @@ pip install -r requirements.txt
 # Create .env file
 cp .env.example .env
 
-# Add your Anthropic API Key
-# Edit .env and add: ANTHROPIC_API_KEY=your_key_here
+# Edit .env — set at minimum:
+# GEMINI_API_KEY=your_key_here
 
 # Start server
 uvicorn main:app --reload --port 8000
@@ -120,8 +127,10 @@ ai-resume-analyzer/
 │   ├── utils/
 │   │   ├── __init__.py
 │   │   ├── models.py            # Pydantic data models
-│   │   ├── pdf_parser.py        # PDF/DOCX extraction
-│   │   └── ai_prompts.py        # Claude prompt templates
+│   │   ├── pdf_parser.py        # PDF/DOCX extraction (pypdf)
+│   │   ├── ats_scanner.py       # Deterministic ATS heuristics
+│   │   ├── ai_client.py         # Gemini-first provider chain
+│   │   └── ai_prompts.py        # LLM prompt templates
 │   ├── requirements.txt
 │   └── .env.example
 ├── frontend/
@@ -133,11 +142,14 @@ ai-resume-analyzer/
 │   │   └── components/
 │   │       ├── UploadZone.jsx       # File upload interface
 │   │       ├── Loader.jsx           # Loading animation
+│   │       ├── LandingPage.jsx      # Landing / start flow
 │   │       ├── ScoreCard.jsx        # Score display
-│   │       ├── ImprovementRoadmap.jsx # Roadmap timeline
-│   │       ├── ResumeEditor.jsx     # Resume editor
-│   │       ├── AIGuidePanel.jsx     # Chat panel
-│   │       └── Toast.jsx            # Notifications
+│   │       ├── ATSReportPanel.jsx   # ATS scan details
+│   │       ├── CareerFitPanel.jsx   # Career guidance
+│   │       ├── ImprovementRoadmap.jsx
+│   │       ├── ResumeEditor.jsx
+│   │       ├── AIGuidePanel.jsx     # SSE chat (fetch + ReadableStream)
+│   │       └── Toast.jsx
 │   ├── index.html
 │   ├── vite.config.js
 │   ├── tailwind.config.js
@@ -179,9 +191,16 @@ Content-Type: multipart/form-data
   "weaknesses": ["Weakness 1"],
   "estimatedImprovement": 12,
   "summary": "Your resume...",
-  "parsedText": "Full resume text..."
+  "parsedText": "Full resume text...",
+  "atsReport": { "atsScore": 72, "missingKeywords": [], "..." : "..." },
+  "careerGuidance": { "roleName": "...", "recommendations": [] }
 }
 ```
+
+### POST `/api/scan-ats-direct`
+Run the deterministic ATS scanner on pasted resume text (no file upload).
+
+**Request:** `multipart/form-data` with `resumeText` and optional `jobDescription`.
 
 ### POST `/api/improve-section`
 Improve a specific resume section.
@@ -216,7 +235,12 @@ Stream chat responses for resume coaching.
 }
 ```
 
-**Response:** Streaming text via Server-Sent Events (SSE)
+**Response:** Streaming text via Server-Sent Events (SSE). Backend logs `[chat] provider=...` (e.g. `gemini-stream`, `call_ai-fallback`, `local-coach-templates`).
+
+Optional headers: `X-Gemini-API-Key`, `X-GitHub-Token` (same as analyze).
+
+### GET `/health` and GET `/version`
+Health and deployment verification endpoints.
 
 ## 🎨 UI/UX Design System
 
@@ -245,21 +269,32 @@ Stream chat responses for resume coaching.
 
 ### Environment Variables
 
-**Backend (.env)**
+**Backend (.env)** — copy from `backend/.env.example`
 ```
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
+GEMINI_API_KEY=your_gemini_key
+ANTHROPIC_API_KEY=          # optional
+GITHUB_TOKEN=               # optional, for GitHub Models fallback
+ALLOWED_ORIGINS=http://localhost:5173
 ```
 
-**Frontend (.env)**
+**Frontend (.env)** — copy from `frontend/.env.example`
 ```
 VITE_API_URL=http://localhost:8000
 ```
 
+In production builds, leave `VITE_API_URL` empty to call the API on the same origin, or set it to your backend URL.
+
 ## 📊 AI Model Configuration
 
-- **Model**: Claude Sonnet 4 (claude-sonnet-4-20250514)
-- **Max Tokens**: 2000 (analysis), 1000 (improvements/chat)
-- **Context Window**: 200K tokens
+**Provider order (analysis / improve / non-stream chat):**
+1. Google Gemini (`gemini-2.5-flash` → `gemini-2.0-flash` → `gemini-1.5-flash` → `gemini-flash-latest`)
+2. Anthropic Claude (`claude-3-5-sonnet-latest`) if `ANTHROPIC_API_KEY` is set
+3. GitHub Models (`gpt-4o-mini`) if `GITHUB_TOKEN` or `X-GitHub-Token` is set
+4. DuckDuckGo AI Chat (keyless fallback)
+
+**Chat streaming:** Gemini stream → Claude stream → GitHub stream → `call_ai` chunked response → local template coach (last resort).
+
+- **Max tokens:** 2000 (analysis), 1000 (improvements/chat)
 
 ## 🧪 Testing Checklist
 
@@ -293,9 +328,10 @@ VITE_API_URL=http://localhost:8000
 - Max file size is 5MB
 
 ### AI API Error
-**Issue**: "Error: 401 Unauthorized"
-- Verify `ANTHROPIC_API_KEY` is set in backend `.env`
-- Check key has correct permissions at https://console.anthropic.com
+**Issue**: "No valid AI API key" or 401 from provider
+- Set `GEMINI_API_KEY` in `backend/.env`, or use **Settings** in the UI to pass `X-Gemini-API-Key` (demo only)
+- If a key was ever committed to git, **rotate it** in Google AI Studio immediately
+- Optional: set `ANTHROPIC_API_KEY` or `GITHUB_TOKEN` for fallbacks
 
 ### Out of Memory
 **Issue**: Large PDFs cause errors
@@ -312,10 +348,11 @@ VITE_API_URL=http://localhost:8000
 
 ## 🔒 Security Considerations
 
-- CORS configured for localhost only
+- **Never embed API keys in source** — use `GEMINI_API_KEY` (and optional fallbacks) via environment only
+- **Rotate** any key that was previously in the repository
+- CORS allows `localhost` and production frontend `https://ai-resume-bice-five.vercel.app` (extend via `ALLOWED_ORIGINS`)
 - File upload limited to 5MB
-- Sanitize user input in chat
-- API key stored in backend .env only
+- Settings modal stores custom keys in **browser localStorage** — convenient for demos; **disable for production** (XSS risk)
 - Rate limiting recommended in production
 
 ## 📝 File Upload Specifications
@@ -346,14 +383,13 @@ Upload to Replit and set environment variables
 
 ### Deploy Frontend (React)
 ```bash
-# Using Vercel
-npm install -g vercel
-vercel
-
-# Using Netlify
+# Production example (Vercel)
+# https://ai-resume-bice-five.vercel.app
 npm run build
-netlify deploy --prod --dir=dist
+# Set VITE_API_URL to your backend URL if API is on another host
 ```
+
+Deploy backend separately (Render, Railway, etc.) and set `GEMINI_API_KEY` plus `ALLOWED_ORIGINS` including your Vercel URL.
 
 ## 📞 Support & Troubleshooting
 
@@ -367,6 +403,7 @@ netlify deploy --prod --dir=dist
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [React Documentation](https://react.dev/)
+- [Google AI Gemini API](https://ai.google.dev/gemini-api/docs)
 - [Anthropic API Documentation](https://docs.anthropic.com/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Framer Motion](https://www.framer.com/motion/)
@@ -390,6 +427,6 @@ This project is open source and available under the MIT License.
 
 ---
 
-**Built with ❤️ using FastAPI, React, and Claude AI**
+**Built with FastAPI, React, and Gemini-first AI (multi-provider fallbacks)**
 
 Enjoy improving your resume! 🚀

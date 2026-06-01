@@ -6,7 +6,7 @@ from fastapi import APIRouter, Header
 from fastapi.responses import StreamingResponse
 from anthropic import Anthropic
 from utils.models import ChatRequest
-from utils.ai_client import get_gemini_key, get_anthropic_key
+from utils.ai_client import get_gemini_key, get_anthropic_key, call_ai
 
 router = APIRouter()
 
@@ -146,7 +146,7 @@ def _get_local_coach_response(user_message: str, resume_context: str) -> str:
         )
     else:
         return (
-            f"### 🤖 Live Career Coach (Local Mode)\n\n"
+            f"### 🤖 Career Coach (offline templates)\n\n"
             f"Welcome! I have analyzed your resume context and detected your target field as **{role}**.\n\n"
             f"How can I help you take your career to the next level? Here are a few topics we can discuss:\n"
             f"- 📊 *'Explain how my ATS score is calculated.'*\n"
@@ -181,9 +181,14 @@ USER'S RESUME CONTEXT (for reference):
 
     messages = [{"role": m.role, "content": m.content} for m in req.messages]
 
+    def _stream_plain_text(text: str, chunk_words: int = 3):
+        words = text.split(" ")
+        for i in range(0, len(words), chunk_words):
+            yield f"data: {' '.join(words[i:i + chunk_words])} \n\n"
+
     def generate():
-        """Generator function for streaming response"""
-        gemini_key = x_gemini_api_key or get_gemini_key()
+        """Stream live LLM when possible; rule templates only if all providers fail."""
+        gemini_key = get_gemini_key(x_gemini_api_key)
         if gemini_key:
             try:
                 genai.configure(api_key=gemini_key)
@@ -206,6 +211,7 @@ USER'S RESUME CONTEXT (for reference):
                             yield f"data: {text}\n\n"
                     except Exception:
                         pass
+                print("[chat] provider=gemini-stream")
                 yield "data: [DONE]\n\n"
                 return
             except Exception as e:
@@ -223,12 +229,11 @@ USER'S RESUME CONTEXT (for reference):
                 ) as stream:
                     for text in stream.text_stream:
                         yield f"data: {text}\n\n"
+                print("[chat] provider=claude-stream")
                 yield "data: [DONE]\n\n"
                 return
             except Exception as e:
-                yield f"data: Error: {str(e)}\n\n"
-                yield "data: [DONE]\n\n"
-                return
+                print(f"Claude chat streaming failed: {str(e)}")
 
         # Fallback to GitHub Models (free tier using local GitHub credentials)
         try:
@@ -280,21 +285,51 @@ USER'S RESUME CONTEXT (for reference):
                                         yield f"data: {text}\n\n"
                                 except Exception:
                                     pass
+                print("[chat] provider=github-models-stream")
                 yield "data: [DONE]\n\n"
                 return
         except Exception as e:
             print(f"GitHub Models streaming failed: {str(e)}")
 
-        # Local coach response fallback
+        # Non-streaming LLM fallback (Gemini → Claude → GitHub → DuckDuckGo via call_ai)
+        user_message = messages[-1]["content"] if messages else ""
+        if user_message:
+            try:
+                history = "\n".join(
+                    f"{m['role']}: {m['content']}" for m in messages[-6:]
+                )
+                prompt = (
+                    f"Conversation so far:\n{history}\n\n"
+                    f"Reply to the user's latest message as the resume coach."
+                )
+                text = call_ai(
+                    prompt,
+                    max_tokens=1000,
+                    system=system_prompt,
+                    api_key=x_gemini_api_key,
+                    github_token=x_github_token,
+                )
+                if text and text.strip():
+                    print("[chat] provider=call_ai-fallback")
+                    yield from _stream_plain_text(text.strip())
+                    yield "data: [DONE]\n\n"
+                    return
+            except Exception as e:
+                print(f"call_ai chat fallback failed: {str(e)}")
+
+        # Last resort: deterministic local templates (no live LLM)
         import time
-        local_response = _get_local_coach_response(messages[-1]["content"] if messages else "", req.resumeContext)
-        words = local_response.split(" ")
-        for i in range(0, len(words), 2):
-            chunk = " ".join(words[i:i+2]) + " "
-            yield f"data: {chunk}\n\n"
+        print("[chat] provider=local-coach-templates")
+        local_response = _get_local_coach_response(user_message, req.resumeContext)
+        for chunk_event in _stream_plain_text(local_response, chunk_words=2):
+            yield chunk_event
             time.sleep(0.02)
         yield "data: [DONE]\n\n"
         return
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
