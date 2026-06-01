@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Upload, File, X, Sparkles, AlertCircle, ArrowLeft } from 'lucide-react'
 
-export const UploadZone = ({ onAnalyze, isLoading }) => {
+export const UploadZone = ({ onAnalyze, isLoading, hasCustomKey }) => {
   const [selectedFile, setSelectedFile] = useState(null)
   const [jobDescription, setJobDescription] = useState('')
   const [error, setError] = useState('')
@@ -112,16 +112,16 @@ export const UploadZone = ({ onAnalyze, isLoading }) => {
             <span style={{
               fontSize: '11px',
               padding: '4px 10px',
-              background: localStorage.getItem('custom_gemini_api_key') ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255, 255, 255, 0.03)',
-              border: localStorage.getItem('custom_gemini_api_key') ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid var(--border)',
-              color: localStorage.getItem('custom_gemini_api_key') ? 'var(--success)' : 'var(--text-muted)',
+              background: hasCustomKey ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+              border: hasCustomKey ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid var(--border)',
+              color: hasCustomKey ? 'var(--success)' : 'var(--text-muted)',
               borderRadius: '20px',
               fontWeight: 600,
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px'
             }}>
-              🔑 Key: {localStorage.getItem('custom_gemini_api_key') ? 'Custom Active' : 'Default Server'}
+              🔑 Key: {hasCustomKey ? 'Custom Active' : 'Default Server'}
             </span>
             <span style={{
               fontSize: '11px',

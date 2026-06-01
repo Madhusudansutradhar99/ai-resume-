@@ -387,8 +387,11 @@ function App() {
             >
               <div style={{ marginBottom: '40px', textAlign: 'center' }}>
                 <Logo size={64} showText={true} />
-              </div>
-              <UploadZone onAnalyze={handleAnalyze} isLoading={isLoading} />
+              <UploadZone 
+                onAnalyze={handleAnalyze} 
+                isLoading={isLoading} 
+                hasCustomKey={!!customKey.trim()} 
+              />
             </div>
           )}
         </AnimatePresence>
@@ -464,7 +467,18 @@ function App() {
                     style={{ flex: 1, paddingRight: '40px' }}
                     placeholder="Enter your Gemini API key (AIzaSy...)"
                     value={customKey}
-                    onChange={(e) => setCustomKey(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setCustomKey(val)
+                      if (val.trim()) {
+                        localStorage.setItem('custom_gemini_api_key', val.trim())
+                        setSaveStatus('Autosaved!')
+                      } else {
+                        localStorage.removeItem('custom_gemini_api_key')
+                        setSaveStatus('Key cleared.')
+                      }
+                      setTimeout(() => setSaveStatus(''), 2000)
+                    }}
                   />
                   <button
                     onClick={() => setShowKeyText(!showKeyText)}
@@ -486,8 +500,8 @@ function App() {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
-                    {saveStatus}
+                  <div style={{ fontSize: '12px', color: 'var(--success)', fontWeight: 600 }}>
+                    {saveStatus || '✓ Auto-saving active'}
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
@@ -504,22 +518,6 @@ function App() {
                       }}
                     >
                       Clear
-                    </button>
-                    <button
-                      onClick={handleSaveKey}
-                      className="btn-glow"
-                      style={{
-                        padding: '6px 12px',
-                        background: 'var(--accent)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        fontWeight: 700,
-                      }}
-                    >
-                      Save Key
                     </button>
                   </div>
                 </div>
@@ -543,7 +541,18 @@ function App() {
                     style={{ flex: 1, paddingRight: '40px' }}
                     placeholder="Enter GitHub Token (github_pat_...)"
                     value={customGithub}
-                    onChange={(e) => setCustomGithub(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setCustomGithub(val)
+                      if (val.trim()) {
+                        localStorage.setItem('custom_github_token', val.trim())
+                        setSaveStatus('GitHub token saved!')
+                      } else {
+                        localStorage.removeItem('custom_github_token')
+                        setSaveStatus('GitHub token cleared.')
+                      }
+                      setTimeout(() => setSaveStatus(''), 2000)
+                    }}
                   />
                   <button
                     onClick={() => setShowGithubText(!showGithubText)}
@@ -565,8 +574,8 @@ function App() {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
-                    {/* Status is shared */}
+                  <div style={{ fontSize: '12px', color: 'var(--success)', fontWeight: 600 }}>
+                    {/* Status indicator */}
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
@@ -583,22 +592,6 @@ function App() {
                       }}
                     >
                       Clear
-                    </button>
-                    <button
-                      onClick={handleSaveGithub}
-                      className="btn-glow"
-                      style={{
-                        padding: '6px 12px',
-                        background: 'var(--accent)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        fontWeight: 700,
-                      }}
-                    >
-                      Save Token
                     </button>
                   </div>
                 </div>
