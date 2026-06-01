@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Header
 from fastapi.middleware.cors import CORSMiddleware
 from routes import analyze, improve, chat
 from dotenv import load_dotenv
@@ -64,6 +64,20 @@ async def version():
         "commit": "add-version-endpoint",
         "deployed_at": "2026-06-01"
     }
+
+
+@app.get("/api/list-models")
+async def list_models(x_gemini_api_key: str = Header(default=None, alias="X-Gemini-API-Key")):
+    import google.generativeai as genai
+    key = x_gemini_api_key or os.getenv("GEMINI_API_KEY")
+    if not key:
+        return {"error": "No API key found"}
+    try:
+        genai.configure(api_key=key)
+        models = [m.name for m in genai.list_models()]
+        return {"models": models}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":
