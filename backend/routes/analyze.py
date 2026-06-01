@@ -625,8 +625,10 @@ async def analyze_resume(
                 
                 return AnalysisResponse(**result)
             except Exception as e_multimodal:
-                print(f"Gemini multimodal PDF analysis failed: {str(e_multimodal)}")
-                # Proceed to raise the 400 error below
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Gemini Multimodal Analysis failed: {str(e_multimodal)}"
+                )
         
         raise HTTPException(
             status_code=400,
