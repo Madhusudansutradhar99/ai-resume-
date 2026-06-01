@@ -563,8 +563,8 @@ async def analyze_resume(
                 import google.generativeai as genai
                 genai.configure(api_key=gemini_key)
                 
-                # Define model and prompt
-                model_name = "gemini-1.5-flash"
+                # Try a fallback chain of models to prevent 404 model not found errors due to deprecations
+                models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"]
                 generation_config = {"response_mime_type": "application/json"}
                 
                 # Setup prompt with job description and instruction
@@ -579,11 +579,25 @@ async def analyze_resume(
                     "data": content
                 }
                 
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content(
-                    [prompt_text, pdf_part],
-                    generation_config=generation_config
-                )
+                response = None
+                last_err = None
+                for m_name in models_to_try:
+                    try:
+                        print(f"Attempting multimodal call with model: {m_name}")
+                        model = genai.GenerativeModel(m_name)
+                        response = model.generate_content(
+                            [prompt_text, pdf_part],
+                            generation_config=generation_config
+                        )
+                        print(f"Gemini multimodal call succeeded with model: {m_name}")
+                        break
+                    except Exception as e_model:
+                        print(f"Model {m_name} failed: {str(e_model)}")
+                        last_err = e_model
+                        continue
+                
+                if not response:
+                    raise last_err
                 
                 response_text = response.text
                 # Parse response

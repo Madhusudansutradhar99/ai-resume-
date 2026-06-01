@@ -100,7 +100,8 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
     if gemini_key:
         try:
             genai.configure(api_key=gemini_key)
-            model_name = "gemini-flash-latest"
+            # Try a fallback chain of models to prevent 404 model not found errors due to deprecations
+            models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"]
             
             kwargs = {}
             if enable_search:
@@ -110,33 +111,43 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
             if "json" in prompt.lower() or "json" in (system or "").lower():
                 generation_config["response_mime_type"] = "application/json"
             
-            try:
-                if system:
-                    model = genai.GenerativeModel(model_name, system_instruction=system, **kwargs)
-                else:
-                    model = genai.GenerativeModel(model_name, **kwargs)
-                
-                response = model.generate_content(
-                    prompt,
-                    generation_config=generation_config
-                )
-                return response.text
-            except Exception as e:
-                # If Google Search tool failed, retry without search
-                if enable_search:
-                    print(f"Gemini with search failed, retrying without search. Error: {str(e)}")
-                    kwargs.pop("tools", None)
+            response = None
+            last_err = None
+            for m_name in models_to_try:
+                try:
                     if system:
-                        model = genai.GenerativeModel(model_name, system_instruction=system, **kwargs)
+                        model = genai.GenerativeModel(m_name, system_instruction=system, **kwargs)
                     else:
-                        model = genai.GenerativeModel(model_name, **kwargs)
+                        model = genai.GenerativeModel(m_name, **kwargs)
+                    
                     response = model.generate_content(
                         prompt,
                         generation_config=generation_config
                     )
                     return response.text
-                else:
-                    raise e
+                except Exception as e:
+                    # If Google Search tool failed, retry without search
+                    if enable_search:
+                        try:
+                            print(f"Gemini with search failed on {m_name}, retrying without search. Error: {str(e)}")
+                            kwargs_no_search = kwargs.copy()
+                            kwargs_no_search.pop("tools", None)
+                            if system:
+                                model = genai.GenerativeModel(m_name, system_instruction=system, **kwargs_no_search)
+                            else:
+                                model = genai.GenerativeModel(m_name, **kwargs_no_search)
+                            response = model.generate_content(
+                                prompt,
+                                generation_config=generation_config
+                            )
+                            return response.text
+                        except Exception as e_inner:
+                            last_err = e_inner
+                    else:
+                        last_err = e
+            
+            if last_err:
+                raise last_err
         except Exception as e:
             print(f"Gemini API call failed, trying Claude/GitHub... Error: {str(e)}")
     
