@@ -94,6 +94,71 @@ def call_github_models(prompt: str, max_tokens: int = 2000, system: str = None, 
         res = json.loads(response.read().decode("utf-8"))
         return res["choices"][0]["message"]["content"]
 
+def call_ddg_chat(prompt: str, max_tokens: int = 2000, system: str = None) -> str:
+    """Free keyless fallback using DuckDuckGo AI Chat (gpt-4o-mini)"""
+    import urllib.request
+    import json
+    
+    url_status = "https://duckduckgo.com/duckchat/v1/status"
+    req_status = urllib.request.Request(
+        url_status,
+        headers={"x-vqd-accept": "1", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    )
+    
+    # 1. Get VQD token
+    with urllib.request.urlopen(req_status, timeout=10) as response:
+        vqd = response.headers.get("x-vqd-4")
+        if not vqd:
+            raise ValueError("Failed to retrieve DuckDuckGo Chat VQD token.")
+            
+    # 2. Send chat request
+    url_chat = "https://duckduckgo.com/duckchat/v1/chat"
+    
+    messages = []
+    if system:
+        messages.append({"role": "user", "content": f"System Instruction: {system}"})
+    messages.append({"role": "user", "content": prompt})
+    
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": messages
+    }
+    
+    req_chat = urllib.request.Request(
+        url_chat,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "x-vqd-4": vqd,
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        },
+        method="POST"
+    )
+    
+    with urllib.request.urlopen(req_chat, timeout=20) as chat_response:
+        body = chat_response.read().decode("utf-8")
+        
+    text_parts = []
+    for line in body.split("\n"):
+        if line.startswith("data:"):
+            data_str = line[5:].strip()
+            if data_str == "[DONE]":
+                break
+            try:
+                data_json = json.loads(data_str)
+                message = data_json.get("message")
+                if message:
+                    text_parts.append(message)
+            except Exception:
+                pass
+                
+    result_text = "".join(text_parts).strip()
+    if not result_text:
+        raise ValueError("DuckDuckGo Chat returned an empty response.")
+        
+    return result_text
+
 def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_search: bool = False, api_key: str = None, github_token: str = None) -> str:
     """Universal wrapper to call AI using Gemini (preferred), Claude (fallback), or GitHub Models (free fallback)"""
     gemini_key = api_key or get_gemini_key()
@@ -152,8 +217,8 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
             print(f"Gemini API call failed, trying Claude/GitHub... Error: {str(e)}")
     
     # Fallback to Claude (if key available)
-    anthropic_key = get_anthropic_key()
-    if anthropic_key:
+    anthropic_key = get_github_token(api_key) or get_anthropic_key()
+    if anthropic_key and not anthropic_key.startswith("gho_") and not anthropic_key.startswith("ghp_"):
         try:
             claude_client = Anthropic(api_key=anthropic_key)
             
@@ -170,11 +235,20 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
         except Exception as e:
             print(f"Claude API call failed: {str(e)}")
             
-    # Fallback to GitHub Models (free tier using local GitHub credentials)
+    # Fallback to GitHub Models (if token available)
+    github_tok = github_token or get_github_token()
+    if github_tok:
+        try:
+            print("Falling back to GitHub Models API (gpt-4o-mini)...")
+            return call_github_models(prompt, max_tokens, system, github_tok)
+        except Exception as e:
+            print(f"GitHub Models API fallback failed: {str(e)}")
+            
+    # Fallback to DuckDuckGo AI Chat (keyless free tier)
     try:
-        print("Falling back to GitHub Models API (gpt-4o-mini)...")
-        return call_github_models(prompt, max_tokens, system, github_token)
+        print("Falling back to DuckDuckGo AI Chat (gpt-4o-mini)...")
+        return call_ddg_chat(prompt, max_tokens, system)
     except Exception as e:
-        print(f"GitHub Models API fallback failed: {str(e)}")
+        print(f"DuckDuckGo AI Chat fallback failed: {str(e)}")
         
-    raise ValueError("No valid AI API key (Gemini, Claude, or GitHub Token) succeeded.")
+    raise ValueError("No valid AI API key (Gemini, Claude, GitHub, or DuckDuckGo) succeeded.")
