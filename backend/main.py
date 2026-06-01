@@ -56,6 +56,17 @@ async def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/version")
+async def version():
+    """Version endpoint to verify deployments"""
+    return {
+        "version": "1.1.2",
+        "commit": "add-version-endpoint",
+        "deployed_at": "2026-06-01"
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
