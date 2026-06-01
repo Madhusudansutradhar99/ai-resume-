@@ -554,6 +554,80 @@ async def analyze_resume(
     # Validate extracted text
     if not text or len(text.strip()) < 100:
         actual_type = file_type or ("PDF" if filename_lower.endswith(".pdf") else "Word document")
+        gemini_key = x_gemini_api_key or get_gemini_key()
+        
+        # If it's a PDF and we have a Gemini API key, try Gemini's multimodal PDF understanding!
+        if actual_type == "PDF" and gemini_key:
+            try:
+                print("Extracted text too short. Attempting multimodal PDF analysis with Gemini...")
+                import google.generativeai as genai
+                genai.configure(api_key=gemini_key)
+                
+                # Define model and prompt
+                model_name = "gemini-1.5-flash"
+                generation_config = {"response_mime_type": "application/json"}
+                
+                # Setup prompt with job description and instruction
+                prompt_text = ANALYSIS_PROMPT.format(
+                    resume_text="[MULTIMODAL PDF - TEXT EXTRACTED VIA GEMINI NATIVE OCR]",
+                    job_description=jobDescription if jobDescription else "Not provided",
+                    web_search_results="[Multimodal PDF analyze mode]"
+                )
+                
+                pdf_part = {
+                    "mime_type": "application/pdf",
+                    "data": content
+                }
+                
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(
+                    [prompt_text, pdf_part],
+                    generation_config=generation_config
+                )
+                
+                response_text = response.text
+                # Parse response
+                if "```json" in response_text:
+                    response_text = response_text.split("```json")[1].split("```")[0].strip()
+                elif "```" in response_text:
+                    response_text = response_text.split("```")[1].split("```")[0].strip()
+                result = json.loads(response_text.strip())
+                
+                if "careerGuidance" not in result or not result["careerGuidance"]:
+                    result["careerGuidance"] = _build_career_guidance("", jobDescription, "Software Engineer")
+                
+                # Setup basic score since we don't have local ATS metrics
+                result["categories"] = {
+                    "formatStructure": result.get("categories", {}).get("formatStructure", 60),
+                    "keywordsMatch": result.get("categories", {}).get("keywordsMatch", 60),
+                    "experienceQuality": result.get("categories", {}).get("experienceQuality", 60),
+                    "educationCerts": result.get("categories", {}).get("educationCerts", 60),
+                    "readability": result.get("categories", {}).get("readability", 60),
+                }
+                result["parsedText"] = "Scanned PDF (Text analyzed via Gemini multimodal OCR)"
+                result["atsReport"] = {
+                    "contact": {"emails": [], "phones": [], "contactPresent": False},
+                    "sections": ["Scanned PDF"],
+                    "skillsFound": [],
+                    "keywordMatchPercent": 50,
+                    "formatWarnings": ["Scanned PDF format is not ATS friendly. Always use a text-based PDF."],
+                    "atsScore": result.get("overallScore", 60),
+                    "matchedKeywords": [],
+                    "missingKeywords": [],
+                    "sectionScore": 50,
+                    "keywordScore": 50,
+                    "formattingScore": 40,
+                    "recommendations": ["Re-create your resume using a text editor (like Word or Google Docs) and export as PDF to make it readable by standard ATS systems."],
+                    "jobDescriptionUsed": bool(jobDescription),
+                    "scanMode": "general"
+                }
+                result["isFallback"] = False
+                
+                return AnalysisResponse(**result)
+            except Exception as e_multimodal:
+                print(f"Gemini multimodal PDF analysis failed: {str(e_multimodal)}")
+                # Proceed to raise the 400 error below
+        
         raise HTTPException(
             status_code=400,
             detail=f"Could not extract meaningful text from the {actual_type}. Please ensure the file is not empty and contains selectable text (not scanned images)."
