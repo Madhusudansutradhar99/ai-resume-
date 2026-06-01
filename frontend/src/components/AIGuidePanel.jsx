@@ -86,7 +86,7 @@ export const AIGuidePanel = ({ resumeContext }) => {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/chat`,
+        `${import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '')}/api/chat`,
         {
           method: 'POST',
           headers,

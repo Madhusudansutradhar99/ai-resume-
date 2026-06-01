@@ -139,7 +139,7 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
             claude_client = Anthropic(api_key=anthropic_key)
             
             kwargs = {
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-3-5-sonnet-latest",
                 "max_tokens": max_tokens,
                 "messages": [{"role": "user", "content": prompt}]
             }

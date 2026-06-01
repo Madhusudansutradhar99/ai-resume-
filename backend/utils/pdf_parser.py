@@ -1,5 +1,7 @@
 from pypdf import PdfReader
 from docx import Document
+from docx.text.paragraph import Paragraph
+from docx.table import Table
 import io
 
 
@@ -31,20 +33,33 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
 
 def extract_text_from_docx(file_bytes: bytes) -> str:
     """
-    Extract text from DOCX file bytes using python-docx.
+    Extract text from DOCX file bytes using python-docx, preserving document order
+    for both paragraphs and tables.
     
     Args:
         file_bytes: Raw bytes of the DOCX file
         
     Returns:
-        Extracted text from all paragraphs
+        Extracted text in order
     """
     try:
         doc = Document(io.BytesIO(file_bytes))
         text_parts = []
-        for para in doc.paragraphs:
-            if para.text.strip():
-                text_parts.append(para.text)
+        for child in doc.element.body.iterchildren():
+            if child.tag.endswith('p'):
+                para = Paragraph(child, doc)
+                if para.text.strip():
+                    text_parts.append(para.text)
+            elif child.tag.endswith('tbl'):
+                table = Table(child, doc)
+                for row in table.rows:
+                    row_text = []
+                    for cell in row.cells:
+                        cell_text = " ".join(p.text.strip() for p in cell.paragraphs if p.text.strip())
+                        if cell_text:
+                            row_text.append(cell_text)
+                    if row_text:
+                        text_parts.append(" | ".join(row_text))
         return "\n".join(text_parts)
     except Exception as e:
         raise ValueError(f"Failed to extract text from DOCX: {str(e)}")

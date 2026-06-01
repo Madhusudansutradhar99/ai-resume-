@@ -1,4 +1,6 @@
 import os
+import urllib.request
+import json
 import google.generativeai as genai
 from fastapi import APIRouter, Header
 from fastapi.responses import StreamingResponse
@@ -214,7 +216,7 @@ USER'S RESUME CONTEXT (for reference):
             try:
                 claude_client = Anthropic(api_key=anthropic_key)
                 with claude_client.messages.stream(
-                    model="claude-sonnet-4-20250514",
+                    model="claude-3-5-sonnet-latest",
                     max_tokens=1000,
                     system=system_prompt,
                     messages=messages
