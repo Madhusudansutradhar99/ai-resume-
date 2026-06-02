@@ -11,4 +11,10 @@ if str(root_dir) not in sys.path:
 if str(api_dir) not in sys.path:
     sys.path.insert(0, str(api_dir))
 
-from api.main import app  # noqa: E402
+try:
+    from api.main import app
+except ImportError:
+    try:
+        from .main import app
+    except ImportError:
+        from main import app  # noqa: E402

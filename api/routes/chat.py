@@ -3,8 +3,16 @@ import urllib.request
 import json
 from fastapi import APIRouter, Header
 from fastapi.responses import StreamingResponse
-from api.utils.models import ChatRequest
-from api.utils.ai_client import get_gemini_key, get_anthropic_key, call_ai
+try:
+    from api.utils.models import ChatRequest
+    from api.utils.ai_client import get_gemini_key, get_anthropic_key, call_ai
+except ImportError:
+    try:
+        from ..utils.models import ChatRequest
+        from ..utils.ai_client import get_gemini_key, get_anthropic_key, call_ai
+    except ImportError:
+        from utils.models import ChatRequest
+        from utils.ai_client import get_gemini_key, get_anthropic_key, call_ai
 
 router = APIRouter()
 
@@ -237,7 +245,13 @@ USER'S RESUME CONTEXT (for reference):
 
         # Fallback to GitHub Models (free tier using local GitHub credentials)
         try:
-            from api.utils.ai_client import get_github_token
+            try:
+                from api.utils.ai_client import get_github_token
+            except ImportError:
+                try:
+                    from ..utils.ai_client import get_github_token
+                except ImportError:
+                    from utils.ai_client import get_github_token
             github_token = get_github_token(x_github_token)
             if github_token:
                 print("Attempting chatbot streaming via GitHub Models...")

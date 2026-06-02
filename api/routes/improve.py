@@ -1,8 +1,18 @@
 import json
 from fastapi import APIRouter, HTTPException, Header
-from api.utils.ai_prompts import IMPROVE_SECTION_PROMPT
-from api.utils.models import ImproveSectionRequest, ImproveSectionResponse
-from api.utils.ai_client import call_ai
+try:
+    from api.utils.ai_prompts import IMPROVE_SECTION_PROMPT
+    from api.utils.models import ImproveSectionRequest, ImproveSectionResponse
+    from api.utils.ai_client import call_ai
+except ImportError:
+    try:
+        from ..utils.ai_prompts import IMPROVE_SECTION_PROMPT
+        from ..utils.models import ImproveSectionRequest, ImproveSectionResponse
+        from ..utils.ai_client import call_ai
+    except ImportError:
+        from utils.ai_prompts import IMPROVE_SECTION_PROMPT
+        from utils.models import ImproveSectionRequest, ImproveSectionResponse
+        from utils.ai_client import call_ai
 
 router = APIRouter()
 
