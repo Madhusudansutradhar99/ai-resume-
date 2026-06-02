@@ -46,8 +46,10 @@ def send_multipart_formdata(url, fields, files):
     return urllib.request.urlopen(req)
 
 def test_analyze_endpoint():
-    print("Reading test_resume.docx...")
-    with open('api/test_resume.docx', 'rb') as f:
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    docx_path = os.path.join(current_dir, '..', 'test_resume.docx')
+    with open(docx_path, 'rb') as f:
         file_content = f.read()
         
     url = "http://localhost:8000/api/analyze"

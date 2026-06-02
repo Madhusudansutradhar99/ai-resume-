@@ -76,6 +76,8 @@ function App() {
       const introSeen = localStorage.getItem('introSeen')
       if (introSeen === 'true') {
         setShowUploadZone(true)
+      } else {
+        localStorage.setItem('introSeen', 'true')
       }
 
       const savedKey = localStorage.getItem('custom_gemini_api_key')
