@@ -1,10 +1,8 @@
 import os
 import urllib.request
 import json
-import google.generativeai as genai
 from fastapi import APIRouter, Header
 from fastapi.responses import StreamingResponse
-from anthropic import Anthropic
 from utils.models import ChatRequest
 from utils.ai_client import get_gemini_key, get_anthropic_key, call_ai
 
@@ -191,6 +189,7 @@ USER'S RESUME CONTEXT (for reference):
         gemini_key = get_gemini_key(x_gemini_api_key)
         if gemini_key:
             try:
+                import google.generativeai as genai
                 genai.configure(api_key=gemini_key)
                 model = genai.GenerativeModel(
                     model_name="gemini-flash-latest",
@@ -220,6 +219,7 @@ USER'S RESUME CONTEXT (for reference):
         anthropic_key = get_anthropic_key()
         if anthropic_key:
             try:
+                from anthropic import Anthropic
                 claude_client = Anthropic(api_key=anthropic_key)
                 with claude_client.messages.stream(
                     model="claude-3-5-sonnet-latest",

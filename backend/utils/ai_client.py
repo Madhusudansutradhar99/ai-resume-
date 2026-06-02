@@ -1,6 +1,4 @@
 import os
-import google.generativeai as genai
-from anthropic import Anthropic
 import subprocess
 import urllib.request
 import json
@@ -209,6 +207,7 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
     gemini_key = get_gemini_key(api_key)
     if gemini_key:
         try:
+            import google.generativeai as genai
             genai.configure(api_key=gemini_key)
             # Try a fallback chain of models to prevent 404 model not found errors due to deprecations
             models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"]
@@ -265,6 +264,7 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
     anthropic_key = get_anthropic_key()
     if anthropic_key:
         try:
+            from anthropic import Anthropic
             claude_client = Anthropic(api_key=anthropic_key)
             
             kwargs = {
