@@ -350,7 +350,7 @@ function App() {
                       ⚠️ Offline Mode: Basic heuristic scanner active
                     </strong>
                     <span style={{ fontSize: '12.5px', color: 'var(--text-primary)', opacity: 0.9, lineHeight: '1.4' }}>
-                      Server key configuration missing ya invalid hai, isliye basic local scanner use ho raha hai jo project details ya recommendations ko deeply analyze nahi kar sakta. <strong>Deep AI Analysis aur proper guidance</strong> activate karne ke liye, right-top settings (⚙️) pe click karein aur apna **Gemini API Key** ya **GitHub Token** save karein.
+                      AI analysis fail ho gaya hai (including free keyless fallbacks), isliye basic local scanner use ho raha hai jo project details ya recommendations ko deeply analyze nahi kar sakta. Deep AI analysis aur proper guidance ke liye verify karein connectivity, ya click settings (⚙️) pe karke apna **Gemini API Key** ya **GitHub Token** save karein.
                     </span>
                   </div>
                 </div>
@@ -450,8 +450,8 @@ function App() {
               <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 4px 0', fontFamily: 'var(--font-title)', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
                 ⚙️ ATS & API Settings
               </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '12.5px', margin: '0 0 20px 0' }}>
-                Configure credentials and monitor your real-time candidate sync log.
+              <p style={{ color: 'var(--text-muted)', fontSize: '12.5px', margin: '0 0 20px 0', lineHeight: '1.4' }}>
+                💡 <strong>Keyless Free AI (Pollinations.ai) active hai!</strong> Koi API key dene ki zaroorat nahi hai. Agar aap direct standard model use karna chahte hain toh custom Gemini API Key enter kar sakte hain.
               </p>
 
               {/* API Key Panel */}

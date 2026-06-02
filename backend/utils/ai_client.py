@@ -102,6 +102,43 @@ def call_github_models(prompt: str, max_tokens: int = 2000, system: str = None, 
         res = json.loads(response.read().decode("utf-8"))
         return res["choices"][0]["message"]["content"]
 
+def call_pollinations(prompt: str, max_tokens: int = 2000, system: str = None) -> str:
+    """Free keyless fallback using Pollinations AI (gpt-4o-mini)"""
+    import urllib.request
+    import json
+    
+    url = "https://text.pollinations.ai/"
+    
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+    
+    payload = {
+        "model": "openai",
+        "messages": messages,
+        "jsonMode": "json" in prompt.lower() or "json" in (system or "").lower()
+    }
+    
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        },
+        method="POST"
+    )
+    
+    with urllib.request.urlopen(req, timeout=30) as response:
+        result_text = response.read().decode("utf-8").strip()
+        
+    if not result_text:
+        raise ValueError("Pollinations AI returned an empty response.")
+        
+    return result_text
+
+
 def call_ddg_chat(prompt: str, max_tokens: int = 2000, system: str = None) -> str:
     """Free keyless fallback using DuckDuckGo AI Chat (gpt-4o-mini)"""
     import urllib.request
@@ -252,6 +289,13 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
         except Exception as e:
             print(f"GitHub Models API fallback failed: {str(e)}")
             
+    # Fallback to Pollinations AI (free keyless tier)
+    try:
+        print("Falling back to Pollinations AI (gpt-4o-mini)...")
+        return call_pollinations(prompt, max_tokens, system)
+    except Exception as e:
+        print(f"Pollinations AI fallback failed: {str(e)}")
+        
     # Fallback to DuckDuckGo AI Chat (keyless free tier)
     try:
         print("Falling back to DuckDuckGo AI Chat (gpt-4o-mini)...")
@@ -259,4 +303,4 @@ def call_ai(prompt: str, max_tokens: int = 2000, system: str = None, enable_sear
     except Exception as e:
         print(f"DuckDuckGo AI Chat fallback failed: {str(e)}")
         
-    raise ValueError("No valid AI API key (Gemini, Claude, GitHub, or DuckDuckGo) succeeded.")
+    raise ValueError("No valid AI API key (Gemini, Claude, GitHub, Pollinations, or DuckDuckGo) succeeded.")
