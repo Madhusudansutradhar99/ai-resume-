@@ -2,8 +2,8 @@ import os
 import json
 import re
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Header
-from utils.pdf_parser import extract_text_from_pdf, extract_text_from_docx
-from utils.ats_scanner import (
+from api.utils.pdf_parser import extract_text_from_pdf, extract_text_from_docx
+from api.utils.ats_scanner import (
     scan_ats,
     _extract_emails,
     _extract_phones,
@@ -11,10 +11,10 @@ from utils.ats_scanner import (
     _extract_skills,
     COMMON_SKILLS,
 )
-from utils.ai_prompts import ANALYSIS_PROMPT
-from utils.web_search import search_ddg
-from utils.models import AnalysisResponse, ScanAtsRequest
-from utils.ai_client import call_ai, get_gemini_key, get_anthropic_key
+from api.utils.ai_prompts import ANALYSIS_PROMPT
+from api.utils.web_search import search_ddg
+from api.utils.models import AnalysisResponse, ScanAtsRequest
+from api.utils.ai_client import call_ai, get_gemini_key, get_anthropic_key
 
 router = APIRouter()
 
